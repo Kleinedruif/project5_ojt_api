@@ -17,6 +17,13 @@ var Conf = require('./conf');
   console.log(err);
 });*/
 
+var routes = require('./routes/index');
+var ranking = require('./routes/ranking');
+var login = require('./routes/login');
+var user = require('./routes/users');
+
+//var user = require('./api/base-user-api');
+
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -30,10 +37,11 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/api', require('./api-manifest'));
-app.get('/', function(req, res){
-	res.send('tour');
-});
+//app.use('/api', require('./api-manifest'));
+
+app.use('/user', user);
+app.use('/', routes);
+app.use('/ranking', ranking);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

@@ -1,17 +1,23 @@
 // User Routes
 
+var express = require('express');
+var router = express.Router();
+
 var path = require('path');
 var validator = require('validator');
 var User = require(path.resolve(__dirname, '../models/user-model'));
 var ErrorMessages = require(path.resolve(__dirname, '../util/error-messages'));
+var RouteAuth = require('../util/application-auth/route-auth');
 var AuthToken = require(path.resolve(__dirname, '../util/application-auth/auth-token'));
 var crypto = require('crypto');
 
-exports.create = function(req, res) {
-	  var name = req.body.name
+
+router.post('/create', function(req, res, next) {
+
+    var name = req.body.name
   	var email = req.body.email;
     var password = req.body.password;
-    console.log(name.first);
+    console.log(req.body);
     if (!name || !name.first || !name.last || !email || !password) {
         return res.status(400).json({ message: 'All those boxes need filling.' });
     }
@@ -34,11 +40,20 @@ exports.create = function(req, res) {
     {
         client: 'mysql',
             connection: {
+                /*
                 host     : '46.17.1.173',
                 port     : '3306',
                 user     : 'm2mtest_groepJ',
                 password : 'SFKYvUleAR',
                 database : 'm2mtest_groepJ',
+                charset  : 'utf8'
+                */
+                
+                host     : 'databases.aii.avans.nl',
+                port     : '3306',
+                user     : 'bpzee',
+                password : 'Ab12345',
+                database : 'bpzee_db2',
                 charset  : 'utf8'
             },
             pool: {
@@ -79,11 +94,18 @@ exports.create = function(req, res) {
 
     });*/
 
-};
+});
 
-exports.login = function(req, res) {
+router.get('/get', RouteAuth.protect, function(req, res, next) {
+    
+    console.log("aye");
+    return res.status(200).json(req.user.toObject({ virtuals: true }));
+    
+});
 
-	var email = req.body.email;
+router.post('/login', function(req, res, next) {
+    
+    var email = req.body.email;
     var password = req.body.password;
 
     if(!password || !email) {
@@ -95,11 +117,21 @@ exports.login = function(req, res) {
     {
         client: 'mysql',
             connection: {
+                
+                /*
                 host     : '46.17.1.173',
                 port     : '3306',
                 user     : 'm2mtest_groepJ',
                 password : 'SFKYvUleAR',
                 database : 'm2mtest_groepJ',
+                charset  : 'utf8'
+                */
+                
+                host     : 'databases.aii.avans.nl',
+                port     : '3306',
+                user     : 'bpzee',
+                password : 'Ab12345',
+                database : 'bpzee_db2',
                 charset  : 'utf8'
             },
             pool: {
@@ -138,10 +170,8 @@ exports.login = function(req, res) {
     }).finally(function() {
         knex.destroy();
     });
-};
+    
+});
 
-exports.get = function(req, res) {
 
-	return res.status(200).json(req.user.toObject({ virtuals: true }));
-
-};
+module.exports = router;
