@@ -8,10 +8,6 @@ var app = require('../app');
 var debug = require('debug')('api:server');
 var http = require('http');
 
-
-console.log('http: ')
-console.log(http);
-
 /**
  * Get port from environment and store in Express.
  */
@@ -25,8 +21,7 @@ app.set('port', port);
 
 var server = http.createServer(app);
 
-console.log('server: ')
-console.log(server);
+
 
 /**
  * Listen on provided port, on all network interfaces.
@@ -35,6 +30,10 @@ console.log(server);
 server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
+
+
+console.log('server: ')
+console.log(server);
 
 /**
  * Normalize a port into a number, string, or false.
