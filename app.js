@@ -5,8 +5,16 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
+var socket_io = require('socket.io');
 
 var app = express();
+
+// Socket.io
+var io = socket_io();
+app.io = io;
+
+var routes = require('./routes/index')(io);
+
 //application config
 var Conf = require('./conf');
 //var knex = require('knex')(Conf.azure_config);
@@ -30,10 +38,13 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/api', require('./api-manifest'));
-app.get('/', function(req, res){
-	res.send('tour');
+// socket.io events
+app.io.on("connection", function(socket){
+    socket.on('disconnect', function(){console.log('Webserver disconnected');});
 });
+
+app.use('/api', require('./api-manifest'));
+app.use('/', routes);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
