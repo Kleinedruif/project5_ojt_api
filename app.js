@@ -9,13 +9,6 @@ var mongoose = require('mongoose');
 var app = express();
 //application config
 var Conf = require('./conf');
-//var knex = require('knex')(Conf.azure_config);
-
-    /*knex.select('ID','Name','SessionLong').from('Users').then(function (rows) {
-  console.log(rows);
-}).catch(function (err) {
-  console.log(err);
-});*/
 
 var routes = require('./routes/index');
 var ranking = require('./routes/ranking');
@@ -23,8 +16,6 @@ var login = require('./routes/login');
 var user = require('./routes/user');
 var team = require('./routes/team');
 var messages = require('./routes/messages');
-//var user = require('./api/base-user-api');
-
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

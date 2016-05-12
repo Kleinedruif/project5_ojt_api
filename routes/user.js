@@ -17,7 +17,7 @@ router.post('/create', function(req, res, next) {
     var name = req.body.name
   	var email = req.body.email;
     var password = req.body.password;
-    console.log(req.body);
+
     if (!name || !name.first || !name.last || !email || !password) {
         return res.status(400).json({ message: 'All those boxes need filling.' });
     }
@@ -35,33 +35,8 @@ router.post('/create', function(req, res, next) {
     });
     
     user.authToken = AuthToken.create(email, user._id);
-    console.log(user);
-    var knex = require('knex')(
-    {
-        client: 'mysql',
-            connection: {
-                /*
-                host     : '46.17.1.173',
-                port     : '3306',
-                user     : 'm2mtest_groepJ',
-                password : 'SFKYvUleAR',
-                database : 'm2mtest_groepJ',
-                charset  : 'utf8'
-                */
-                
-                host     : 'databases.aii.avans.nl',
-                port     : '3306',
-                user     : 'bpzee',
-                password : 'Ab12345',
-                database : 'bpzee_db2',
-                charset  : 'utf8'
-            },
-            pool: {
-                min: 1,
-                max: 4
-            },
-            useNullAsDefault: true
-    });
+    var knex = req.app.locals.db;
+    
     knex('users').insert({email: user.email, hash: user.hash, salt: user.salt, name: user.name.first+' '+user.name.last, authToken: user.authToken}).then(function(inserts) {
       console.log(inserts.length + ' new books saved.');
     })
@@ -98,7 +73,6 @@ router.post('/create', function(req, res, next) {
 
 router.get('/get', RouteAuth.protect, function(req, res, next) {
     
-    console.log("aye");
     return res.status(200).json(req.user.toObject({ virtuals: true }));
     
 });
@@ -113,37 +87,9 @@ router.post('/login', function(req, res, next) {
     }
     
     email = email.toLowerCase();
-    var knex = require('knex')(
-    {
-        client: 'mysql',
-            connection: {
-                
-                /*
-                host     : '46.17.1.173',
-                port     : '3306',
-                user     : 'm2mtest_groepJ',
-                password : 'SFKYvUleAR',
-                database : 'm2mtest_groepJ',
-                charset  : 'utf8'
-                */
-                
-                host     : 'databases.aii.avans.nl',
-                port     : '3306',
-                user     : 'bpzee',
-                password : 'Ab12345',
-                database : 'bpzee_db2',
-                charset  : 'utf8'
-            },
-            pool: {
-                min: 1,
-                max: 4
-            },
-            useNullAsDefault: true
-    });
-    console.log(email);
-    console.log(password);
+    var knex = req.app.locals.db;
+
     knex('users').where('email',email).then(function(user){
-        console.log(user);
         user = user[0];
         
         if (!user) {
