@@ -29,11 +29,9 @@ router.get('/:id', function(req, res, next) {
       query.where('status', req.query.status);
   }
   
-  query.then(function(user) {
-    
-    var pers = user[0];
-   
-    res.json(pers);
+  query.then(function(team) {
+       
+    res.json(team[0]);
     
   });
   
@@ -49,9 +47,9 @@ router.get('/:id/participants', function(req, res, next) {
       query.where('status', req.query.status);
   }
   
-  query.then(function(user) {
+  query.then(function(users) {
        
-    res.json(user);
+    res.json(users);
     
   });
     

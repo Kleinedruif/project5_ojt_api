@@ -35,17 +35,15 @@ router.post('/create', function(req, res, next) {
     });
     
     user.authToken = AuthToken.create(email, user._id);
-    var knex = req.app.locals.db;
+    var db = req.app.locals.db;
     
-    knex('users').insert({email: user.email, hash: user.hash, salt: user.salt, name: user.name.first+' '+user.name.last, authToken: user.authToken}).then(function(inserts) {
+    db('users').insert({email: user.email, hash: user.hash, salt: user.salt, name: user.name.first+' '+user.name.last, authToken: user.authToken}).then(function(inserts) {
       console.log(inserts.length + ' new books saved.');
     })
     .catch(function(error) {
       // If we get here, that means that neither the 'Old Books' catalogues insert,
       // nor any of the books inserts will have taken place.
       console.error(error);
-    }).finally(function() {
-        knex.destroy();
     });
     return res.status(200).json(user.toObject({ virtuals: true }));
     /*user.save(function(err, createdUser) {
@@ -87,9 +85,9 @@ router.post('/login', function(req, res, next) {
     }
     
     email = email.toLowerCase();
-    var knex = req.app.locals.db;
+    var db = req.app.locals.db;
 
-    knex('users').where('email',email).then(function(user){
+    db('users').where('email',email).then(function(user){
         user = user[0];
         
         if (!user) {
@@ -99,7 +97,7 @@ router.post('/login', function(req, res, next) {
           var salt = new Buffer(user.salt, 'base64');
           if(user.hash == crypto.pbkdf2Sync(password, salt, 10000, 64).toString('base64')){
             var authToken = AuthToken.create(email, user._id);
-            knex('users').where('email',email).update('authToken',authToken).then(function(inserts) {
+            db('users').where('email',email).update('authToken',authToken).then(function(inserts) {
               console.log('Succes');
               return res.status(200).json({ message: "OK", authToken: authToken });
             })
@@ -113,8 +111,6 @@ router.post('/login', function(req, res, next) {
         }
 
 
-    }).finally(function() {
-        knex.destroy();
     });
     
 });
@@ -149,9 +145,9 @@ router.get('/:id/parents', function(req, res, next) {
       query.where('u2.status', req.query.status);
   }
   
-  query.then(function(user) {
+  query.then(function(users) {
         
-    res.json(user);
+    res.json(users);
     
   });
     
@@ -169,9 +165,9 @@ router.get('/:id/children', function(req, res, next) {
       query.where('u2.status', req.query.status);
   }
   
-  query.then(function(user) {
+  query.then(function(users) {
     
-    res.json(user);
+    res.json(users);
     
   });
     
