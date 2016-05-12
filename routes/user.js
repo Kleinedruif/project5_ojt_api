@@ -177,7 +177,13 @@ router.get('/:id', function(req, res, next) {
     
   var db = req.app.locals.db;
   
-  db('user').where({'guid': req.params.id}).then(function(user) {
+  var query = db('user').where({'guid': req.params.id});
+  
+  if(req.query.status) {
+      query.where('status', req.query.status);
+  }
+  
+  query.then(function(user) {
     
     res.json(user);
     
@@ -189,9 +195,15 @@ router.get('/:id/parents', function(req, res, next) {
    
    var db = req.app.locals.db;
   
-  db('user as u1')
+  var query = db('user as u1')
   .innerJoin('user as u2', 'u1.parent_guid', 'u2.guid')
-  .where('u1.guid', req.params.id).then(function(user) {
+  .where('u1.guid', req.params.id);
+  
+  if(req.query.status) {
+      query.where('u2.status', req.query.status);
+  }
+  
+  query.then(function(user) {
         
     res.json(user);
     
@@ -203,9 +215,15 @@ router.get('/:id/children', function(req, res, next) {
    
    var db = req.app.locals.db;
   
-  db('user as u1')
+  var query = db('user as u1')
   .innerJoin('user as u2', 'u1.guid', 'u2.parent_guid')
-  .where('u1.guid', req.params.id).then(function(user) {
+  .where('u1.guid', req.params.id);
+  
+  if(req.query.status) {
+      query.where('u2.status', req.query.status);
+  }
+  
+  query.then(function(user) {
     
     res.json(user);
     
@@ -217,9 +235,15 @@ router.get('/:id/team', function(req, res, next) {
    
    var db = req.app.locals.db;
   
-  db.select("t.*").from("team as t")
+  var query = db.select("t.*").from("team as t")
   .leftOuterJoin('user as u', 't.guid', 'u.team_guid')
-  .where('u.guid', req.params.id).then(function(team) {
+  .where('u.guid', req.params.id);
+  
+  if(req.query.status) {
+      query.where('t.status', req.query.status);
+  }
+  
+  query.then(function(team) {
     
     res.json(team);
     

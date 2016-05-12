@@ -6,13 +6,7 @@ router.get('/', function(req, res, next) {
   
   var db = req.app.locals.db;
   
-  var query = db('team');
-  
-  if(req.query.status) {
-      query.where('status', req.query.status);
-  }
-  
-  query.then(function(user) {
+  db('message').then(function(user) {
     
     res.json(user);
     
@@ -39,22 +33,5 @@ router.get('/:id', function(req, res, next) {
   
 });
 
-router.get('/:id/participants', function(req, res, next) {
-   
-   var db = req.app.locals.db;
-  
-  var query = db('user').where({'team_guid': req.params.id});
-  
-  if(req.query.status) {
-      query.where('status', req.query.status);
-  }
-  
-  query.then(function(user) {
-       
-    res.json(user);
-    
-  });
-    
-});
 
 module.exports = router;
