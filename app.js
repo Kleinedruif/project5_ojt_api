@@ -4,7 +4,6 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-var mongoose = require('mongoose');
 
 var app = express();
 //application config
@@ -21,6 +20,7 @@ var routes = require('./routes/index');
 var ranking = require('./routes/ranking');
 var login = require('./routes/login');
 var user = require('./routes/users');
+var accountData = require('./routes/accountData');
 
 //var user = require('./api/base-user-api');
 
@@ -71,6 +71,7 @@ app.locals.db = knex;
 app.use('/user', user);
 app.use('/', routes);
 app.use('/ranking', ranking);
+app.use('/accountdata', accountData);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
