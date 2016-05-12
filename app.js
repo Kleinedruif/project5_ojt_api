@@ -37,6 +37,35 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+var knex = require('knex')(
+    {
+        client: 'mysql',
+            connection: {
+                /*
+                host     : '46.17.1.173',
+                port     : '3306',
+                user     : 'm2mtest_groepJ',
+                password : 'SFKYvUleAR',
+                database : 'm2mtest_groepJ',
+                charset  : 'utf8'
+                */
+                
+                host     : 'databases.aii.avans.nl',
+                port     : '3306',
+                user     : 'bpzee',
+                password : 'Ab12345',
+                database : 'bpzee_db2',
+                charset  : 'utf8'
+            },
+            pool: {
+                min: 1,
+                max: 4
+            },
+            useNullAsDefault: true
+    });
+
+app.locals.db = knex;
+
 //app.use('/api', require('./api-manifest'));
 
 app.use('/user', user);
