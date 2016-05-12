@@ -17,6 +17,13 @@ var Conf = require('./conf');
   console.log(err);
 });*/
 
+var routes = require('./routes/index');
+var ranking = require('./routes/ranking');
+var login = require('./routes/login');
+var user = require('./routes/users');
+
+//var user = require('./api/base-user-api');
+
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -30,10 +37,40 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/api', require('./api-manifest'));
-app.get('/', function(req, res){
-	res.send('tour');
-});
+var knex = require('knex')(
+    {
+        client: 'mysql',
+            connection: {
+                /*
+                host     : '46.17.1.173',
+                port     : '3306',
+                user     : 'm2mtest_groepJ',
+                password : 'SFKYvUleAR',
+                database : 'm2mtest_groepJ',
+                charset  : 'utf8'
+                */
+                
+                host     : 'databases.aii.avans.nl',
+                port     : '3306',
+                user     : 'bpzee',
+                password : 'Ab12345',
+                database : 'bpzee_db2',
+                charset  : 'utf8'
+            },
+            pool: {
+                min: 1,
+                max: 4
+            },
+            useNullAsDefault: true
+    });
+
+app.locals.db = knex;
+
+//app.use('/api', require('./api-manifest'));
+
+app.use('/user', user);
+app.use('/', routes);
+app.use('/ranking', ranking);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
