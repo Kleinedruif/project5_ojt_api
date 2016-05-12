@@ -20,7 +20,8 @@ var Conf = require('./conf');
 var routes = require('./routes/index');
 var ranking = require('./routes/ranking');
 var login = require('./routes/login');
-var user = require('./routes/users');
+var user = require('./routes/user');
+var team = require('./routes/team');
 
 //var user = require('./api/base-user-api');
 
@@ -71,6 +72,7 @@ app.locals.db = knex;
 app.use('/user', user);
 app.use('/', routes);
 app.use('/ranking', ranking);
+app.use('/team', team);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

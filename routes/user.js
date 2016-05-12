@@ -173,5 +173,60 @@ router.post('/login', function(req, res, next) {
     
 });
 
+router.get('/:id', function(req, res, next) {
+    
+  var db = req.app.locals.db;
+  
+  db('user').where({'guid': req.params.id}).then(function(user) {
+    
+    res.json(user);
+    
+  });
+    
+});
+
+router.get('/:id/parents', function(req, res, next) {
+   
+   var db = req.app.locals.db;
+  
+  db('user as u1')
+  .innerJoin('user as u2', 'u1.parent_guid', 'u2.guid')
+  .where('u1.guid', req.params.id).then(function(user) {
+        
+    res.json(user);
+    
+  });
+    
+});
+
+router.get('/:id/children', function(req, res, next) {
+   
+   var db = req.app.locals.db;
+  
+  db('user as u1')
+  .innerJoin('user as u2', 'u1.guid', 'u2.parent_guid')
+  .where('u1.guid', req.params.id).then(function(user) {
+    
+    res.json(user);
+    
+  });
+    
+});
+
+router.get('/:id/team', function(req, res, next) {
+   
+   var db = req.app.locals.db;
+  
+  db.select("t.*").from("team as t")
+  .leftOuterJoin('user as u', 't.guid', 'u.team_guid')
+  .where('u.guid', req.params.id).then(function(team) {
+    
+    res.json(team);
+    
+  });
+    
+});
+
+
 
 module.exports = router;
