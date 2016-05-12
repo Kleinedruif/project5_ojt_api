@@ -71,7 +71,7 @@ app.locals.db = knex;
 app.use('/user', user);
 app.use('/', routes);
 app.use('/ranking', ranking);
-app.use('/accountdata', accountData);
+app.use('/accounts', accountData);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
