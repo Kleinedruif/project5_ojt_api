@@ -14,8 +14,11 @@ router.get('/', function(req, res, next) {
   if(type) {
     
     if(type == "participants") {
-      query = db('user_has_activicty as uha').select("uha.user_guid", "u.name").sum('uha.score as score')
-                                      .innerJoin("user as u", "uha.user_guid", "u.guid").groupBy('user_guid').orderBy('uha.score', orderBy);
+      query = db('user_has_activicty as uha').select("uha.user_guid", "u.first_name", "u.last_name", "u.male", "u.team_guid", "u.shirt")
+                                             .sum('uha.score as score')
+											 .innerJoin("user as u", "uha.user_guid", "u.guid")
+                                             .groupBy('user_guid')
+                                             .orderBy('uha.score', orderBy);
     } 
     else if(type == "team") {
       
@@ -46,8 +49,6 @@ router.get('/', function(req, res, next) {
   } else {
     res.json({'message': 'type not set'});
   }
-  
-  
   
 });
 
