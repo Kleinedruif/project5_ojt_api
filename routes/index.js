@@ -17,6 +17,10 @@ module.exports = function(io) {
         res.json({msg: 'succes'});
     });
     
+    router.get('/retrieveToken', function(req, res,next){
+        
+    });
+    
     return router;
 }
 
