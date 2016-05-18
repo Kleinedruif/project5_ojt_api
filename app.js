@@ -9,21 +9,13 @@ var mongoose = require('mongoose');
 var app = express();
 //application config
 var Conf = require('./conf');
-//var knex = require('knex')(Conf.azure_config);
-
-    /*knex.select('ID','Name','SessionLong').from('Users').then(function (rows) {
-  console.log(rows);
-}).catch(function (err) {
-  console.log(err);
-});*/
 
 var routes = require('./routes/index');
 var ranking = require('./routes/ranking');
 var login = require('./routes/login');
-var user = require('./routes/users');
-
-//var user = require('./api/base-user-api');
-
+var user = require('./routes/user');
+var team = require('./routes/team');
+var messages = require('./routes/messages');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -37,11 +29,16 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Set a database (and query builder) to use globally
+app.locals.db = require('./modules/database');
+
 //app.use('/api', require('./api-manifest'));
 
 app.use('/user', user);
 app.use('/', routes);
 app.use('/ranking', ranking);
+app.use('/team', team);
+app.use('/messages', messages);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

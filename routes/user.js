@@ -18,7 +18,7 @@ router.post('/create', function(req, res, next) {
     var name = req.body.name
   	var email = req.body.email;
     var password = req.body.password;
-    console.log(req.body);
+
     if (!name || !name.first || !name.last || !email || !password) {
         return res.status(400).json({ message: 'All those boxes need filling.' });
     }
@@ -36,42 +36,15 @@ router.post('/create', function(req, res, next) {
     });
     
     user.authToken = AuthToken.create(email, user._id);
-    console.log(user);
-    var knex = require('knex')(
-    {
-        client: 'mysql',
-            connection: {
-                /*
-                host     : '46.17.1.173',
-                port     : '3306',
-                user     : 'm2mtest_groepJ',
-                password : 'SFKYvUleAR',
-                database : 'm2mtest_groepJ',
-                charset  : 'utf8'
-                */
-                
-                host     : 'databases.aii.avans.nl',
-                port     : '3306',
-                user     : 'bpzee',
-                password : 'Ab12345',
-                database : 'bpzee_db2',
-                charset  : 'utf8'
-            },
-            pool: {
-                min: 1,
-                max: 4
-            },
-            useNullAsDefault: true
-    });
-    knex('users').insert({email: user.email, hash: user.hash, salt: user.salt, name: user.name.first+' '+user.name.last, authToken: user.authToken}).then(function(inserts) {
+    var db = req.app.locals.db;
+    
+    db('users').insert({email: user.email, hash: user.hash, salt: user.salt, name: user.name.first+' '+user.name.last, authToken: user.authToken}).then(function(inserts) {
       console.log(inserts.length + ' new books saved.');
     })
     .catch(function(error) {
       // If we get here, that means that neither the 'Old Books' catalogues insert,
       // nor any of the books inserts will have taken place.
       console.error(error);
-    }).finally(function() {
-        knex.destroy();
     });
     return res.status(200).json(user.toObject({ virtuals: true }));
     /*user.save(function(err, createdUser) {
@@ -99,7 +72,6 @@ router.post('/create', function(req, res, next) {
 
 router.get('/get', RouteAuth.protect, function(req, res, next) {
     
-    console.log("aye");
     return res.status(200).json(req.user.toObject({ virtuals: true }));
     
 });
@@ -114,37 +86,9 @@ router.post('/login', function(req, res, next) {
     }
     
     email = email.toLowerCase();
-    var knex = require('knex')(
-    {
-        client: 'mysql',
-            connection: {
-                
-                /*
-                host     : '46.17.1.173',
-                port     : '3306',
-                user     : 'm2mtest_groepJ',
-                password : 'SFKYvUleAR',
-                database : 'm2mtest_groepJ',
-                charset  : 'utf8'
-                */
-                
-                host     : 'databases.aii.avans.nl',
-                port     : '3306',
-                user     : 'bpzee',
-                password : 'Ab12345',
-                database : 'bpzee_db2',
-                charset  : 'utf8'
-            },
-            pool: {
-                min: 1,
-                max: 4
-            },
-            useNullAsDefault: true
-    });
-    console.log(email);
-    console.log(password);
-    knex('users').where('email',email).then(function(user){
-        console.log(user);
+    var db = req.app.locals.db;
+
+    db('users').where('email',email).then(function(user){
         user = user[0];
         
         if (!user) {
@@ -154,7 +98,7 @@ router.post('/login', function(req, res, next) {
           var salt = new Buffer(user.salt, 'base64');
           if(user.hash == crypto.pbkdf2Sync(password, salt, 10000, 64).toString('base64')){
             var authToken = AuthToken.create(email, user._id);
-            knex('users').where('email',email).update('authToken',authToken).then(function(inserts) {
+            db('users').where('email',email).update('authToken',authToken).then(function(inserts) {
               console.log('Succes');
               return res.status(200).json({ message: "OK", authToken: authToken });
             })
@@ -168,17 +112,87 @@ router.post('/login', function(req, res, next) {
         }
 
 
-    }).finally(function() {
-        knex.destroy();
     });
     
 });
 
-router.get('/getuser', function(req, res, next) {
-    db('users').first().then(function(user) {
-        res.json(user);
-    });
-})
+router.get('/:id', function(req, res, next) {
+    
+  var db = req.app.locals.db;
+  
+  var query = db('user').where({'guid': req.params.id});
+  
+  if(req.query.status) {
+      query.where('status', req.query.status);
+  }
+  
+  query.then(function(user) {
+    
+    res.json(user);
+    
+  });
+    
+});
+
+router.get('/:id/parents', function(req, res, next) {
+   
+   var db = req.app.locals.db;
+  
+  var query = db('user as u1')
+  .innerJoin('user as u2', 'u1.parent_guid', 'u2.guid')
+  .where('u1.guid', req.params.id);
+  
+  if(req.query.status) {
+      query.where('u2.status', req.query.status);
+  }
+  
+  query.then(function(users) {
+        
+    res.json(users);
+    
+  });
+    
+});
+
+router.get('/:id/children', function(req, res, next) {
+   
+   var db = req.app.locals.db;
+  
+  var query = db('user as u1')
+  .innerJoin('user as u2', 'u1.guid', 'u2.parent_guid')
+  .where('u1.guid', req.params.id);
+  
+  if(req.query.status) {
+      query.where('u2.status', req.query.status);
+  }
+  
+  query.then(function(users) {
+    
+    res.json(users);
+    
+  });
+    
+});
+
+router.get('/:id/team', function(req, res, next) {
+   
+   var db = req.app.locals.db;
+  
+  var query = db.select("t.*").from("team as t")
+  .leftOuterJoin('user as u', 't.guid', 'u.team_guid')
+  .where('u.guid', req.params.id);
+  
+  if(req.query.status) {
+      query.where('t.status', req.query.status);
+  }
+  
+  query.then(function(team) {
+    
+    res.json(team);
+    
+  });
+    
+});
 
 
 module.exports = router;
