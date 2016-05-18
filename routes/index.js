@@ -19,5 +19,3 @@ module.exports = function(io) {
     
     return router;
 }
-
-//module.exports = router;
