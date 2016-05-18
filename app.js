@@ -16,6 +16,7 @@ var login = require('./routes/login');
 var user = require('./routes/user');
 var team = require('./routes/team');
 var messages = require('./routes/messages');
+var participant = require('./routes/participant');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -61,6 +62,7 @@ app.locals.db = knex;
 //app.use('/api', require('./api-manifest'));
 
 app.use('/user', user);
+app.use('/participant', participant);
 app.use('/', routes);
 app.use('/ranking', ranking);
 app.use('/team', team);
