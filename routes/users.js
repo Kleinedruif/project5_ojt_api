@@ -10,6 +10,7 @@ var ErrorMessages = require(path.resolve(__dirname, '../util/error-messages'));
 var RouteAuth = require('../util/application-auth/route-auth');
 var AuthToken = require(path.resolve(__dirname, '../util/application-auth/auth-token'));
 var crypto = require('crypto');
+var db = require('../modules/database');
 
 
 router.post('/create', function(req, res, next) {
@@ -172,6 +173,12 @@ router.post('/login', function(req, res, next) {
     });
     
 });
+
+router.get('/getuser', function(req, res, next) {
+    db('users').first().then(function(user) {
+        res.json(user);
+    });
+})
 
 
 module.exports = router;

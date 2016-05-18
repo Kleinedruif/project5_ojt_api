@@ -1,0 +1,16 @@
+{
+    "client": "mysql",
+    "connection": {
+        "host"      : "databases.aii.avans.nl",
+        "port"      : "3306",
+        "user"      : "bpzee",
+        "password"  : "Ab12345",
+        "database"  : "bpzee_db2",
+        "charset"   : "utf8"
+    },
+    "pool": {
+        "min": 1,
+        "max": 10
+    },
+    "useNullAsDefault": true
+}
