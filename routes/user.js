@@ -194,5 +194,4 @@ router.get('/:id/team', function(req, res, next) {
 });
 
 
-
 module.exports = router;

@@ -39,6 +39,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+<<<<<<< HEAD
 var socket_client_token = 'a;wudbiuabwdlhbailucbvepsy9p483nfoushfb;jabyldlf3yb2hfbalskyfauvflhaslfyu372g';
 var myDomain = 'localhost:3000';
 
@@ -90,6 +91,10 @@ var knex = require('knex')(
     });
 
 app.locals.db = knex;
+=======
+// Set a database (and query builder) to use globally
+app.locals.db = require('./modules/database');
+>>>>>>> 3ee7262219f80ac27adf89a60baafbb7a0356a75
 
 //app.use('/api', require('./api-manifest'));
 

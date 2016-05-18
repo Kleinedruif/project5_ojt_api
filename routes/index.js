@@ -7,18 +7,14 @@ module.exports = function(io) {
       res.render('index', { title: 'Express' });
     });
 
-
+    // Recieve messages here
     router.post('/message', function(req, res, next) {
         console.log(req.body);
-
-        // {body: {to (username), from (username), msg, date}}
+        
+        // Send message back to all sockets
         io.sockets.send(req.body);
         
         res.json({msg: 'succes'});
-    });
-    
-    router.get('/retrieveToken', function(req, res,next){
-        
     });
     
     return router;
