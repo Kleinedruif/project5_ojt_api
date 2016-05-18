@@ -6,8 +6,6 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var socket_io = require('socket.io');
-var ursa = require('ursa');
-var fs = require('fs');
 
 var app = express();
 
@@ -15,12 +13,10 @@ var app = express();
 var io = socket_io();
 app.io = io;
 
-var routes = require('./routes/index')(io);
-
 //application config
 var Conf = require('./conf');
 
-var routes = require('./routes/index');
+var routes = require('./routes/index')(app.io);
 var ranking = require('./routes/ranking');
 var login = require('./routes/login');
 var user = require('./routes/user');
@@ -39,28 +35,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-var socket_client_token = 'a;wudbiuabwdlhbailucbvepsy9p483nfoushfb;jabyldlf3yb2hfbalskyfauvflhaslfyu372g';
-var myDomain = 'localhost:3000';
-
-// Make sure the incomming sockets is from the right domain and with the right token
-app.io.set('authorization', function(handshake, callback){
-    var domain = handshake.headers.host;
-    
-    var key = ursa.createPrivateKey(fs.readFileSync('./private_key.pem'));
-    var clientToken = key.decrypt(handshake._query.token, 'base64', 'utf8');
-    
-    if (myDomain == domain && clientToken == socket_client_token){
-        callback(null, true);
-    } else {
-       return callback('Deny', false);
-    }    
-})
-
-// socket.io events
-app.io.on("connection", function(socket){
-    console.log('socket connected');
-    socket.on('disconnect', function(){console.log('Webserver disconnected');});
-});
+// Setup socket
+var socket = require('./modules/socket')(app.io);
 
 // Set a database (and query builder) to use globally
 app.locals.db = require('./modules/database');
