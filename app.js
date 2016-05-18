@@ -5,12 +5,18 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
+var socket_io = require('socket.io');
 
 var app = express();
+
+// Socket.io
+var io = socket_io();
+app.io = io;
+
 //application config
 var Conf = require('./conf');
 
-var routes = require('./routes/index');
+var routes = require('./routes/index')(app.io);
 var ranking = require('./routes/ranking');
 var login = require('./routes/login');
 var user = require('./routes/user');
@@ -28,6 +34,9 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Setup socket
+var socket = require('./modules/socket')(app.io);
 
 // Set a database (and query builder) to use globally
 app.locals.db = require('./modules/database');
