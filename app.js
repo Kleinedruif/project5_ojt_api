@@ -5,12 +5,18 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
+var socket_io = require('socket.io');
 
 var app = express();
+
+// Socket.io
+var io = socket_io();
+app.io = io;
+
 //application config
 var Conf = require('./conf');
 
-var routes = require('./routes/index');
+var routes = require('./routes/index')(app.io);
 var ranking = require('./routes/ranking');
 var login = require('./routes/login');
 var user = require('./routes/user');
@@ -30,34 +36,11 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-var knex = require('knex')(
-    {
-        client: 'mysql',
-            connection: {
-                /*
-                host     : '46.17.1.173',
-                port     : '3306',
-                user     : 'm2mtest_groepJ',
-                password : 'SFKYvUleAR',
-                database : 'm2mtest_groepJ',
-                charset  : 'utf8'
-                */
-                
-                host     : 'databases.aii.avans.nl',
-                port     : '3306',
-                user     : 'bpzee',
-                password : 'Ab12345',
-                database : 'bpzee_db2',
-                charset  : 'utf8'
-            },
-            pool: {
-                min: 1,
-                max: 4
-            },
-            useNullAsDefault: true
-    });
+// Setup socket
+var socket = require('./modules/socket')(app.io);
 
-app.locals.db = knex;
+// Set a database (and query builder) to use globally
+app.locals.db = require('./modules/database');
 
 //app.use('/api', require('./api-manifest'));
 

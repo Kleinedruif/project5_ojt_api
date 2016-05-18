@@ -1,9 +1,21 @@
 var express = require('express');
 var router = express.Router();
 
-/* GET home page. */
-router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
-});
+module.exports = function(io) {
+    /* GET home page. */
+    router.get('/', function(req, res, next) {
+      res.render('index', { title: 'Express' });
+    });
 
-module.exports = router;
+    // Recieve messages here
+    router.post('/message', function(req, res, next) {
+        console.log(req.body);
+        
+        // Send message back to all sockets
+        io.sockets.send(req.body);
+        
+        res.json({msg: 'succes'});
+    });
+    
+    return router;
+}
