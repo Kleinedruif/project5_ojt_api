@@ -10,7 +10,6 @@ var ErrorMessages = require(path.resolve(__dirname, '../util/error-messages'));
 var RouteAuth = require('../util/application-auth/route-auth');
 var AuthToken = require(path.resolve(__dirname, '../util/application-auth/auth-token'));
 var crypto = require('crypto');
-var db = require('../modules/database');
 
 
 router.post('/create', function(req, res, next) {
