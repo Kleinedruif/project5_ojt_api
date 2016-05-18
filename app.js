@@ -39,7 +39,6 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-<<<<<<< HEAD
 var socket_client_token = 'a;wudbiuabwdlhbailucbvepsy9p483nfoushfb;jabyldlf3yb2hfbalskyfauvflhaslfyu372g';
 var myDomain = 'localhost:3000';
 
@@ -63,38 +62,8 @@ app.io.on("connection", function(socket){
     socket.on('disconnect', function(){console.log('Webserver disconnected');});
 });
 
-var knex = require('knex')(
-    {
-        client: 'mysql',
-            connection: {
-                /*
-                host     : '46.17.1.173',
-                port     : '3306',
-                user     : 'm2mtest_groepJ',
-                password : 'SFKYvUleAR',
-                database : 'm2mtest_groepJ',
-                charset  : 'utf8'
-                */
-                
-                host     : 'databases.aii.avans.nl',
-                port     : '3306',
-                user     : 'bpzee',
-                password : 'Ab12345',
-                database : 'bpzee_db2',
-                charset  : 'utf8'
-            },
-            pool: {
-                min: 1,
-                max: 4
-            },
-            useNullAsDefault: true
-    });
-
-app.locals.db = knex;
-=======
 // Set a database (and query builder) to use globally
 app.locals.db = require('./modules/database');
->>>>>>> 3ee7262219f80ac27adf89a60baafbb7a0356a75
 
 //app.use('/api', require('./api-manifest'));
 
