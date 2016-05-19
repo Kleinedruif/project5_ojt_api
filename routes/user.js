@@ -37,7 +37,7 @@ router.post('/create', function(req, res, next) {
     user.authToken = AuthToken.create(email, user._id);
     var db = req.app.locals.db;
     
-    db('users').insert({email: user.email, hash: user.hash, salt: user.salt, name: user.name.first+' '+user.name.last, authToken: user.authToken}).then(function(inserts) {
+    db('user').insert({email: user.email, hash: user.hash, salt: user.salt, first_name: user.name.first, last_name: user.name.last, authToken: user.authToken}).then(function(inserts) {
       console.log(inserts.length + ' new books saved.');
     })
     .catch(function(error) {
@@ -87,7 +87,7 @@ router.post('/login', function(req, res, next) {
     email = email.toLowerCase();
     var db = req.app.locals.db;
 
-    db('users').where('email',email).then(function(user){
+    db('user as u').innerJoin('user_has_role as uhr', 'u.guid', 'uhr.user_guid').innerJoin('role as r', 'uhr.role_guid', 'r.guid').where('u.email',email).then(function(user){
         user = user[0];
         
         if (!user) {
@@ -97,9 +97,9 @@ router.post('/login', function(req, res, next) {
           var salt = new Buffer(user.salt, 'base64');
           if(user.hash == crypto.pbkdf2Sync(password, salt, 10000, 64).toString('base64')){
             var authToken = AuthToken.create(email, user._id);
-            db('users').where('email',email).update('authToken',authToken).then(function(inserts) {
-              console.log('Succes');
-              return res.status(200).json({ message: "OK", authToken: authToken });
+            db('user').where('email',email).update('authToken',authToken).then(function(inserts) {
+                console.log(inserts);              
+              return res.status(200).json({ message: "OK", authToken: authToken, role: user.name });
             })
             .catch(function(error) {
                return res.status(500).json({ message: error });
@@ -133,36 +133,14 @@ router.get('/:id', function(req, res, next) {
     
 });
 
-router.get('/:id/parents', function(req, res, next) {
-   
-   var db = req.app.locals.db;
-  
-  var query = db('user as u1')
-  .innerJoin('user as u2', 'u1.parent_guid', 'u2.guid')
-  .where('u1.guid', req.params.id);
-  
-  if(req.query.status) {
-      query.where('u2.status', req.query.status);
-  }
-  
-  query.then(function(users) {
-        
-    res.json(users);
-    
-  });
-    
-});
-
 router.get('/:id/children', function(req, res, next) {
    
    var db = req.app.locals.db;
   
-  var query = db('user as u1')
-  .innerJoin('user as u2', 'u1.guid', 'u2.parent_guid')
-  .where('u1.guid', req.params.id);
+  var query = db('participant').where('parent_guid', req.params.id);
   
   if(req.query.status) {
-      query.where('u2.status', req.query.status);
+      query.where('p.status', req.query.status);
   }
   
   query.then(function(users) {
@@ -172,26 +150,5 @@ router.get('/:id/children', function(req, res, next) {
   });
     
 });
-
-router.get('/:id/team', function(req, res, next) {
-   
-   var db = req.app.locals.db;
-  
-  var query = db.select("t.*").from("team as t")
-  .leftOuterJoin('user as u', 't.guid', 'u.team_guid')
-  .where('u.guid', req.params.id);
-  
-  if(req.query.status) {
-      query.where('t.status', req.query.status);
-  }
-  
-  query.then(function(team) {
-    
-    res.json(team);
-    
-  });
-    
-});
-
 
 module.exports = router;
