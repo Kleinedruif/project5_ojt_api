@@ -15,10 +15,10 @@ router.get('/', function(req, res, next) {
     
     if(type == "participants") {
       query = db('participant_has_activity as pha').select("pha.participant_guid", "p.first_name", "p.last_name", "p.gender", "p.team_guid", "p.shirt")
-                                             .sum('pha.score as score')
-											                       .innerJoin("participant as p", "pha.participant_guid", "p.guid")
-                                             .groupBy('pha.participant_guid')
-                                             .orderBy('pha.score', orderBy);
+                                                   .sum('pha.score as score')
+                                                   .innerJoin("participant as p", "pha.participant_guid", "p.guid")
+                                                   .groupBy('pha.participant_guid')
+                                                   .orderBy('pha.score', orderBy);
     } 
     else if(type == "team") {
       

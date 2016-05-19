@@ -135,9 +135,12 @@ router.get('/:id', function(req, res, next) {
 
 router.get('/:id/children', function(req, res, next) {
    
-   var db = req.app.locals.db;
+  var db = req.app.locals.db;
   
-  var query = db('participant').where('parent_guid', req.params.id);
+  var query = db('participant as p').select('p.*')
+                               .innerJoin('participant_parent')
+                               .where('parent_guid', req.params.id)
+                               .groupBy('p.guid');
   
   if(req.query.status) {
       query.where('p.status', req.query.status);
