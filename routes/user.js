@@ -1,5 +1,7 @@
 // User Routes
 
+"use strict"
+
 var express = require('express');
 var router = express.Router();
 
@@ -134,21 +136,79 @@ router.get('/:id', function(req, res, next) {
 });
 
 router.get('/:id/children', function(req, res, next) {
-   
-   var db = req.app.locals.db;
-  
-  var query = db('participant').where('parent_guid', req.params.id);
-  
-  if(req.query.status) {
-      query.where('p.status', req.query.status);
+  let db = req.app.locals.db;
+    
+  let getChildren = function(){
+    let query = db('participant as p').select('p.*')
+                                      .innerJoin('participant_parent as pp', 'p.guid', 'pp.participant_guid')
+                                      .where('pp.parent_guid', req.params.id)
+                                      .groupBy('p.guid');
+    
+    if(req.query.status) {
+        query.where('p.status', req.query.status);
+    }
+    
+    query.then(getTraits);
   }
-  
-  query.then(function(users) {
-    
-    res.json(users);
-    
-  });
-    
+ 
+  let getTraits = function(children){
+    for(let i=0; i<children.length; i++){
+      let query = db('participant_trait as pt').select('pt.trait')
+                                               .where('pt.participant_guid', children[i].guid);
+
+      query.then(function(traits){
+        //TODO find a way to make query handle this, as to get rid of the loop
+        children[i].traits = [];
+        traits.forEach(function(entry){
+          children[i].traits.push(entry.trait); 
+        });
+
+        //TODO find better way to call next after being done getting data
+        if(i==children.length-1) getClassifications(children);
+      });
+    }
+  }
+
+  let getClassifications = function(children){
+    for(let i=0; i<children.length; i++){
+      let query = db('participant_classification as pc').select('pc.classification')
+                                                        .where('pc.participant_guid', children[i].guid);
+
+      query.then(function(classifications){
+        //TODO find a way to make query handle this, as to get rid of the loop
+        children[i].classifications = [];
+        classifications.forEach(function(entry){
+          children[i].classifications.push(entry.classification); 
+        });
+
+        //TODO find better way to call next after being done getting data
+        if(i==children.length-1) getNotes(children);
+      });
+    }
+  }
+
+  let getNotes = function(children){
+    for(let i=0; i<children.length; i++){
+      let query = db('note as n').select('n.*')
+                                 .where('n.participant_guid', children[i].guid);
+
+      query.then(function(notes){
+        //TODO find a way to make query handle this, as to get rid of the loop
+        children[i].notes = [];
+        notes.forEach(function(entry){
+          children[i].notes.push({
+            guid: entry.guid,
+            content: entry.content
+          }); 
+        });
+
+        //TODO find better way to call next after being done getting data
+        if(i==children.length-1) res.json(children);
+      });
+    }
+  }
+
+  getChildren();
 });
 
 module.exports = router;
