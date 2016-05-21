@@ -1,17 +1,40 @@
 var express = require('express');
+var RouteAuth = require('../util/application-auth/route-auth');
 var router = express.Router();
 
+var validateTokens = function(req, res){
+  if(req.get('auth_key')){
+    
+  }
+  else{
+    res.status(403).json({ error: "Forbidden" });
+  } 
+  
+  if(req.get('api_key')){
+    // TODO: Validation for api key    
+    return true;
+  }
+  else{
+    res.status(403).json({ error: "API key is missing." })
+  }  
+}
+
+var authenticate = require('../util/authMiddelware');
+
 /* GET home page. */
-router.get('/', function(req, res, next) {
+router.get('/', authenticate, function(req, res, next) {  
+  // if(validateTokens(req, res)){
+     res.json({ response: 'hoi Jelte' });
+  // }
+  
+  var user = req.user;
+  
   
   var db = req.app.locals.db;
-  
-  db('message').then(function(user) {
-    
-    res.json(user);
-    
-  });
+ 
 });
+
+
 
 router.get('/:id', function(req, res, next) {
   

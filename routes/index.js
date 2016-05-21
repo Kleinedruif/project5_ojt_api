@@ -8,13 +8,13 @@ module.exports = function(io) {
     });
 
     // Recieve messages here
-    router.post('/message', function(req, res, next) {
+    router.post('/', function(req, res, next) {
         console.log(req.body);
         
         // Send message back to all sockets
         io.sockets.send(req.body);
         
-        res.json({msg: 'succes'});
+        res.json({msg: req.body});
     });
     
     return router;
