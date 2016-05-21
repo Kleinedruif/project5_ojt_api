@@ -24,7 +24,7 @@ router.get('/:id', function(req, res, next) {
 
 router.get('/:id/parents', function(req, res, next) {
    
-   var db = req.app.locals.db;
+  var db = req.app.locals.db;
   
   var query = db('participant as p').select('u.*').innerJoin('user as u', 'p.parent_guid', 'u.guid').where({'p.guid': req.params.id});
   
