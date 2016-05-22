@@ -1,37 +1,71 @@
 var express = require('express');
+var uuid = require('node-uuid');
 var RouteAuth = require('../util/application-auth/route-auth');
+var authenticate = require('../util/authMiddelware');
 var router = express.Router();
 
-var validateTokens = function(req, res){
-  if(req.get('auth_key')){
-    
-  }
-  else{
-    res.status(403).json({ error: "Forbidden" });
+/* GET home page. */
+router.get('/',/* authenticate, */ function(req, res, next) {   
+ 
+  
+ 
+});
+
+router.post('/:id', /*authenticate, */ function(req, res){
+   var db = req.app.locals.db;
+  
+  // The person who sends the message
+  // var sendFrom = req.user.id //or something like that
+  var sendFrom = '1';
+  
+  //var sendTo = req.params.id;
+  //TODO: get the user corresponding to this email
+  
+  var sendTo = '4';
+  
+  var id = uuid.v4();  
+  var date = new Date();
+  var messageTitle = req.body.title;
+  var messageBody = req.body.body;
+  
+  if(!messageBody || !messageTitle || !sendTo){
+    return res.json({ error: "Please fill in everything." });
   } 
   
-  if(req.get('api_key')){
-    // TODO: Validation for api key    
-    return true;
-  }
-  else{
-    res.status(403).json({ error: "API key is missing." })
-  }  
-}
-
-var authenticate = require('../util/authMiddelware');
-
-/* GET home page. */
-router.get('/', authenticate, function(req, res, next) {  
-  // if(validateTokens(req, res)){
-     res.json({ response: 'hoi Jelte' });
-  // }
-  
-  var user = req.user;
-  
-  
-  var db = req.app.locals.db;
+   
+  db('message').insert({
+    guid: id,
+    sender_guid: sendFrom,
+    receiver_guid: sendTo,
+    title: messageTitle,
+    date: date,
+    body: messageBody   
+     
+  }).then(function(inserts){
+    console.log('second insert:');
+    console.log();
+    console.log(inserts);
+  }).catch(function(error){
+    console.log(error);
+  });
+   /*
+  db('message_user').insert({
+    'receiver_guid': sendTo,
+    'message_guid': id,
+    status: 'unread'
+    
+  }).then(function(inserts){
+    console.log('first insert:');
+    console.log();
+    console.log(inserts);
+  })
+  */
  
+  
+  
+  
+  
+  
 });
 
 
