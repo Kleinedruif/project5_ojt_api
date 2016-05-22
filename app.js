@@ -16,12 +16,12 @@ app.io = io;
 //application config
 var Conf = require('./conf');
 
-var routes = require('./routes/index')(app.io);
+var routes = require('./routes/index');
 var ranking = require('./routes/ranking');
 var login = require('./routes/login');
 var user = require('./routes/user');
 var team = require('./routes/team');
-var messages = require('./routes/messages');
+var messages = require('./routes/messages')(app.io);
 var participant = require('./routes/participant');
 
 // view engine setup
@@ -44,14 +44,12 @@ app.locals.db = require('./modules/database');
 
 //app.use('/api', require('./api-manifest'));
 
-app.use('/user/messages', messages); // Put this before the default /user
+app.use('/messages', messages); // Put this before the default /user
 app.use('/user', user);
 app.use('/participant', participant);
 app.use('/', routes);
 app.use('/ranking', ranking);
 app.use('/team', team);
-
-
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
