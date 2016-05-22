@@ -16,7 +16,7 @@ var crypto = require('crypto');
 
 router.post('/create', function(req, res, next) {
 
-    var name = req.body.name
+    var name = req.body.name;
   	var email = req.body.email;
     var password = req.body.password;
 
@@ -31,12 +31,13 @@ router.post('/create', function(req, res, next) {
     email = email.toLowerCase();
 
     var user = new User({
-        email: email
-        , password: password
-        , name: name
+        email: email,
+        password: password,
+        name: name
     });
     
     user.authToken = AuthToken.create(email, user._id);
+    
     var db = req.app.locals.db;
     
     db('user').insert({email: user.email, hash: user.hash, salt: user.salt, first_name: user.name.first, last_name: user.name.last, authToken: user.authToken}).then(function(inserts) {

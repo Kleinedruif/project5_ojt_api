@@ -1,37 +1,40 @@
 var express = require('express');
 var router = express.Router();
+var uuid = require('node-uuid');
+var RouteAuth = require('../util/application-auth/route-auth');
+var authenticate = require('../util/authMiddelware');
 
-/* GET home page. */
-router.get('/', function(req, res, next) {
-  
-  var db = req.app.locals.db;
-  
-  db('message').then(function(user) {
-    
-    res.json(user);
-    
+//TODO use authenticate middleware
+//TODO make route '/'
+router.get('/:id',/* authenticate, */ function(req, res, next){
+	var db = req.app.locals.db;
+
+	var query = db('message as m').select('m.*')
+                                .where('m.receiver_guid', req.params.id);
+
+  query.then(function(messages){
+    res.json(messages);
   });
 });
 
-router.get('/:id', function(req, res, next) {
-  
+//TODO use authenticate middleware
+router.post('/',/* authenticate, */ function(req, res){
   var db = req.app.locals.db;
-  
-  var query = db('team').where({'guid': req.params.id});
-  
-  if(req.query.status) {
-      query.where('status', req.query.status);
-  }
-  
-  query.then(function(user) {
-    
-    var pers = user[0];
-   
-    res.json(pers);
-    
-  });
-  
-});
 
+  db('message').insert({
+    guid: Math.round(new Date().getTime()/1000), 
+    sender_guid: req.body.senderId, 
+    receiver_guid: req.body.receiverId, 
+    title: req.body.title,
+    body: req.body.body
+  })
+  .then(function(inserts) {
+    console.log('new message saved');
+    res.status(200).json(inserts);//user.toObject({ virtuals: true }));
+  })
+  .catch(function(error) {
+    console.error(error);
+  });
+});
 
 module.exports = router;

@@ -44,12 +44,14 @@ app.locals.db = require('./modules/database');
 
 //app.use('/api', require('./api-manifest'));
 
+app.use('/user/messages', messages); // Put this before the default /user
 app.use('/user', user);
 app.use('/participant', participant);
 app.use('/', routes);
 app.use('/ranking', ranking);
 app.use('/team', team);
-app.use('/messages', messages);
+
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
