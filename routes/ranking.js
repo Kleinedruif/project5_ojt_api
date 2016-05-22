@@ -14,20 +14,20 @@ router.get('/', function(req, res, next) {
   if(type) {
     
     if(type == "participants") {
-      query = db('user_has_activicty as uha').select("uha.user_guid", "u.first_name", "u.last_name", "u.male", "u.team_guid", "u.shirt")
-                                             .sum('uha.score as score')
-											 .innerJoin("user as u", "uha.user_guid", "u.guid")
-                                             .groupBy('user_guid')
-                                             .orderBy('uha.score', orderBy);
+      query = db('participant_has_activity as pha').select("pha.participant_guid", "p.first_name", "p.last_name", "p.gender", "p.team_guid", "p.shirt")
+                                                   .sum('pha.score as score')
+                                                   .innerJoin("participant as p", "pha.participant_guid", "p.guid")
+                                                   .groupBy('pha.participant_guid')
+                                                   .orderBy('pha.score', orderBy);
     } 
     else if(type == "team") {
       
       query = db("team as t").select("t.guid as team_guid", "t.name as team_name")
-                             .innerJoin("user as u", "t.guid", "u.team_guid")
-                             .innerJoin("user_has_activicty as uha", "u.guid", "uha.user_guid")
-                             .sum("uha.score as score")
+                             .innerJoin("participant as p", "t.guid", "p.team_guid")
+                             .innerJoin("participant_has_activity as pha", "p.guid", "pha.participant_guid")
+                             .sum("pha.score as score")
                              .groupBy("t.guid")
-                             .orderBy('uha.score', orderBy);      
+                             .orderBy('pha.score', orderBy);      
       
     }
     else {
@@ -37,7 +37,7 @@ router.get('/', function(req, res, next) {
     if(gender) {
       
       gender = (gender == "m" ? 1 : 0);
-      query.where('u.gender', gender);
+      query.where('p.gender', gender);
       
     }
     
