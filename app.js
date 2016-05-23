@@ -47,9 +47,9 @@ app.locals.db = require('./modules/database');
 app.use('/messages', messages); // Put this before the default /user
 app.use('/user', user);
 app.use('/participant', participant);
-app.use('/', routes);
 app.use('/ranking', ranking);
 app.use('/team', team);
+app.use('/', routes);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
