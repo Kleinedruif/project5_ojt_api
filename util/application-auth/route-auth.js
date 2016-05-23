@@ -8,7 +8,10 @@ var User = require(path.resolve(__dirname, '../../models/user-model'));
 // Use Bearer Strategy as authentication
 passport.use(new BearerStrategy(
     function(token, done) {
+        console.log('rgthrewrfghjygtrfedfhj');
+               
         User.findOne({ authToken: token }, function (err, user) {
+            
             if (err) { return done(err); }
             if (!user) { return done(null, false); }
             return done(null, user, { scope: 'all' });
