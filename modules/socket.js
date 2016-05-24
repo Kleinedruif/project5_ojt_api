@@ -8,8 +8,7 @@ module.exports = function(io) {
     
     // Make sure the incomming sockets is from the right domain and with the right token
     // This is a middleware function
-    io.set('authorization', function(handshake, callback){
-        
+    io.set('authorization', function(handshake, callback){      
         // Retrive private key
         var key = ursa.createPrivateKey(fs.readFileSync('./private_key.pem'));
         
@@ -27,7 +26,7 @@ module.exports = function(io) {
     })
 
     // socket.io events
-    io.on("connection", function(socket){
+    io.on('connection', function(socket){
         console.log('Webserver connected');
         socket.on('disconnect', function(){
             console.log('Webserver disconnected');

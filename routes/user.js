@@ -137,10 +137,10 @@ router.get('/:id', function(req, res, next) {
 });
 
 router.get('/:id/children', function(req, res, next) {
-  var db = req.app.locals.db;
+  let db = req.app.locals.db;
     
-  var getChildren = function(){
-    var query = db('participant as p').select('p.*')
+  let getChildren = function(){
+    let query = db('participant as p').select('p.*')
                                       .innerJoin('participant_parent as pp', 'p.guid', 'pp.participant_guid')
                                       .where('pp.parent_guid', req.params.id)
                                       .groupBy('p.guid');
@@ -152,9 +152,9 @@ router.get('/:id/children', function(req, res, next) {
     query.then(getTraits);
   }
  
-  var getTraits = function(children){
-    for(var i=0; i<children.length; i++){
-      var query = db('participant_trait as pt').select('pt.trait')
+  let getTraits = function(children){
+    for(let i=0; i<children.length; i++){
+      let query = db('participant_trait as pt').select('pt.trait')
                                                .where('pt.participant_guid', children[i].guid);
 
       query.then(function(traits){
@@ -170,9 +170,9 @@ router.get('/:id/children', function(req, res, next) {
     }
   }
 
-  var getClassifications = function(children){
-    for(var i=0; i<children.length; i++){
-      var query = db('participant_classification as pc').select('pc.classification')
+  let getClassifications = function(children){
+    for(let i=0; i<children.length; i++){
+      let query = db('participant_classification as pc').select('pc.classification')
                                                         .where('pc.participant_guid', children[i].guid);
 
       query.then(function(classifications){
@@ -188,9 +188,9 @@ router.get('/:id/children', function(req, res, next) {
     }
   }
 
-  var getNotes = function(children){
-    for(var i=0; i<children.length; i++){
-      var query = db('note as n').select('n.*')
+  let getNotes = function(children){
+    for(let i=0; i<children.length; i++){
+      let query = db('note as n').select('n.*')
                                  .where('n.participant_guid', children[i].guid);
 
       query.then(function(notes){
