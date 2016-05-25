@@ -100,7 +100,6 @@ router.post('/login', function(req, res, next) {
             if(user.hash == crypto.pbkdf2Sync(password, salt, 10000, 64).toString('base64')){
                 var authToken = AuthToken.create(email, user._id);
                 db('user').where('email',email).update('authToken',authToken).then(function(inserts) {
-                    console.log(inserts);              
                     return res.status(200).json({ 
                         message: "OK", 
                         authToken: authToken,
