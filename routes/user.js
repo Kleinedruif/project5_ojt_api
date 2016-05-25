@@ -95,22 +95,32 @@ router.post('/login', function(req, res, next) {
         
         if (!user) {
             return res.status(400).json({ message: "Woops, wrong email or password." });
-        }
-        else{
-          var salt = new Buffer(user.salt, 'base64');
-          if(user.hash == crypto.pbkdf2Sync(password, salt, 10000, 64).toString('base64')){
-            var authToken = AuthToken.create(email, user._id);
-            db('user').where('email',email).update('authToken',authToken).then(function(inserts) {
-                console.log(inserts);              
-              return res.status(200).json({ message: "OK", authToken: authToken, role: user.name });
-            })
-            .catch(function(error) {
-               return res.status(500).json({ message: error });
-            });
-          }
-          else {
-            return res.status(400).json({ message: 'Invalid Credentials' });
-          }
+        } else {
+            var salt = new Buffer(user.salt, 'base64');
+            if(user.hash == crypto.pbkdf2Sync(password, salt, 10000, 64).toString('base64')){
+                var authToken = AuthToken.create(email, user._id);
+                db('user').where('email',email).update('authToken',authToken).then(function(inserts) {
+                    return res.status(200).json({ 
+                        message: "OK", 
+                        authToken: authToken,
+                        
+                        // User data
+                        guid: user.guid,
+                        team_guid: user.team_guid,
+                        status: user.status,
+                        email: user.email,
+                        first_name: user.first_name,
+                        last_name: user.last_name,
+                        role_guid: user.role_guid,
+                        role_name: user.name             // Role name
+                    });
+                })
+                .catch(function(error) {
+                    return res.status(500).json({ message: error });
+                });
+            } else {
+                return res.status(400).json({ message: 'Invalid Credentials' });
+            }
         }
 
 
