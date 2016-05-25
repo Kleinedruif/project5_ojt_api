@@ -15,8 +15,6 @@ module.exports = function(io) {
         var webserver_ip = process.env.webserver_ip || webserverConfig.webserver_ip;
 
         console.log(handshake.connection._peername.address);
-        //console.log(socket.request.connection.remoteAddress);
-        //console.log(socket.request.connection._peername.address);
         
         // Descerypt incomming token
         var clientToken = key.decrypt(handshake._query.token, 'base64', 'utf8');
