@@ -12,8 +12,23 @@ let ErrorMessages = require(path.resolve(__dirname, '../util/error-messages'));
 let RouteAuth = require('../util/application-auth/route-auth');
 let AuthToken = require(path.resolve(__dirname, '../util/application-auth/auth-token'));
 let crypto = require('crypto');
+
 let multer  = require('multer'); // multipart/form-data middleware
-let upload = multer({dest: 'uploads/'});
+let storage = multer.diskStorage({
+	destination: './uploads/',
+	filename: function (req, file, cb) {
+		crypto.pseudoRandomBytes(16, function (err, raw) {
+			if (err) return cb(err)
+
+			cb(null, raw.toString('hex') + path.extname(file.originalname))
+		})
+	}
+})
+let upload = multer({ storage: storage });
+
+//let upload = multer({dest: 'uploads/'});
+let fs = require('fs');
+let ssh2 = require('ssh2');
 
 router.post('/create', function(req, res, next) {
     let user = new User({
@@ -192,8 +207,73 @@ router.get('/:id/children', function(req, res, next) {
 });
 
 router.post('/image', upload.single('file'), function(req, res, next) {
-	console.log(req.file);
-	res.status(200).send(req.body); //TODO change
+	let conn = new ssh2();
+
+	conn.on(
+		'connect',
+		function(){
+			console.log("- connected");
+		}
+	);
+	 
+	conn.on(
+		'ready',
+		function(){
+			console.log("- ready");
+	 
+			conn.sftp(
+				function(err, sftp){
+					if(err){
+						console.log("Error, problem starting SFTP: %s", err);
+						process.exit(2);
+					}
+	 
+					console.log("- SFTP started");
+	 
+					// upload file
+					let readStream = fs.createReadStream(req.file.path);
+					let writeStream = sftp.createWriteStream("user/1.jpg");
+	 
+					// what to do when transfer finishes
+					writeStream.on(
+						'close',
+						function(){
+							console.log("- file transferred");
+							sftp.end();
+							process.exit(0);
+						}
+					);
+	 
+					// initiate transfer of file
+					readStream.pipe(writeStream);
+				}
+			);
+		}
+	);
+	 
+	conn.on(
+		'error',
+		function (err) {
+			console.log("- connection error: %s", err);
+			res.status(400).send('file upload fialed');
+			process.exit(1);
+		}
+	);
+	 
+	conn.on(
+		'end',
+		function(){
+			res.status(200).send('file succesfully uploaded');
+			process.exit(0);
+		}
+	);
+	 
+	conn.connect({
+		"host": "omejoopstour.timohoff.nl",
+		"port": 22,
+		"username": "omejoopstour",
+		"password": "aar04dappel"
+	});
 });
 
 module.exports = router;
