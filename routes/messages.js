@@ -21,22 +21,8 @@ module.exports = function(io) {
                                                 
                                                 .where('m.receiver_guid', req.params.id)
                                                 .orWhere('m.sender_guid', req.params.id)
-/*
-        var query = db('message as m').distinct('m.guid').select('m.*', 'u2.first_name', 'u2.last_name', 'r.*')
-                                             
-                                        .leftJoin('user as u', function() {
-                                            this.on('m.receiver_guid', '=', 'u.guid').orOn('m.sender_guid', '=', 'u.guid')
-                                        })
-                                                                                                                        
-                                        .innerJoin('user as u2', 'm.sender_guid', 'u2.guid')
-                                        
-                                        .leftJoin('user_has_role as uhr', 'u.guid', 'uhr.user_guid')
-                                        .leftJoin('role as r', 'uhr.role_guid', 'r.guid')
-                                    
-                                        .where('m.receiver_guid', req.params.id)
-                                        .orWhere('m.sender_guid', req.params.id)
-                                        .orderBy('m.date','DESC');
-*/
+                                                .orderBy('m.date','ASC');
+
         query.then(function(messages){
             res.json(messages);
         });
