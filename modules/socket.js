@@ -24,6 +24,7 @@ module.exports = function(io) {
             // Set connection is true and move on to the connection part
             callback(null, true);
         } else {
+            console.log('socket authorization failed');
             // Cancal the socket connection and return
             return callback('Deny', false);
         }    
