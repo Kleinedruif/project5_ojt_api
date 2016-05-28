@@ -225,14 +225,13 @@ router.post('/image', upload.single('file'), function(req, res, next) {
 				function(err, sftp){
 					if(err){
 						console.log("Error, problem starting SFTP: %s", err);
-						process.exit(2);
 					}
 	 
 					console.log("- SFTP started");
 	 
 					// upload file
 					let readStream = fs.createReadStream(req.file.path);
-					let writeStream = sftp.createWriteStream("user/1.jpg");
+					let writeStream = sftp.createWriteStream("user/"+req.body.id+".jpg");
 	 
 					// what to do when transfer finishes
 					writeStream.on(
@@ -240,7 +239,7 @@ router.post('/image', upload.single('file'), function(req, res, next) {
 						function(){
 							console.log("- file transferred");
 							sftp.end();
-							process.exit(0);
+							res.status(200).send('file succesfully uploaded');
 						}
 					);
 	 
@@ -256,7 +255,6 @@ router.post('/image', upload.single('file'), function(req, res, next) {
 		function (err) {
 			console.log("- connection error: %s", err);
 			res.status(400).send('file upload fialed');
-			process.exit(1);
 		}
 	);
 	 
@@ -264,7 +262,6 @@ router.post('/image', upload.single('file'), function(req, res, next) {
 		'end',
 		function(){
 			res.status(200).send('file succesfully uploaded');
-			process.exit(0);
 		}
 	);
 	 
