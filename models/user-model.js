@@ -6,17 +6,11 @@ var uniqueValidator = require('mongoose-unique-validator');
 var Schema = mongoose.Schema;
 
 var UserSchema = new Schema({
-
    email: { type: String, lowercase: true, trim: true, index: true, required: true, unique: true }
-
    , hash: String
-
    , salt: String
-
    , name: { first: String, last: String }
-
    , authToken: { type: String, required: true }
-
 });
 
 // Virtual method for getting a full name
