@@ -15,7 +15,7 @@ let crypto = require('crypto');
 
 let multer  = require('multer'); // multipart/form-data middleware
 let storage = multer.diskStorage({
-	destination: './uploads/',
+	destination: './tmp/',
 	filename: function (req, file, cb) {
 		crypto.pseudoRandomBytes(16, function (err, raw) {
 			if (err) return cb(err)
@@ -26,7 +26,6 @@ let storage = multer.diskStorage({
 })
 let upload = multer({ storage: storage });
 
-//let upload = multer({dest: 'uploads/'});
 let fs = require('fs');
 let ssh2 = require('ssh2');
 
@@ -240,6 +239,7 @@ router.post('/image', upload.single('file'), function(req, res, next) {
 							console.log("- file transferred");
 							sftp.end();
 							res.status(200).send('file succesfully uploaded');
+							fs.unlinkSync(req.file.path);
 						}
 					);
 	 
