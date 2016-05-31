@@ -2,26 +2,42 @@
 
 "use strict"
 
-var express = require('express');
-var router = express.Router();
+let express = require('express');
+let router = express.Router();
 
-var path = require('path');
-var validator = require('validator');
-var User = require(path.resolve(__dirname, '../models/user-model'));
-var ErrorMessages = require(path.resolve(__dirname, '../util/error-messages'));
-var RouteAuth = require('../util/application-auth/route-auth');
-var AuthToken = require(path.resolve(__dirname, '../util/application-auth/auth-token'));
-var crypto = require('crypto');
+let path = require('path');
+let validator = require('validator');
+let User = require(path.resolve(__dirname, '../models/user-model'));
+let ErrorMessages = require(path.resolve(__dirname, '../util/error-messages'));
+let RouteAuth = require('../util/application-auth/route-auth');
+let AuthToken = require(path.resolve(__dirname, '../util/application-auth/auth-token'));
+let crypto = require('crypto');
 
+let multer  = require('multer'); // multipart/form-data middleware
+let storage = multer.diskStorage({
+	destination: './tmp/',
+	filename: function (req, file, cb) {
+		crypto.pseudoRandomBytes(16, function (err, raw) {
+			if (err) return cb(err)
+
+			cb(null, raw.toString('hex') + path.extname(file.originalname))
+		})
+	}
+})
+let upload = multer({ storage: storage });
+
+let fs = require('fs');
+let ssh2 = require('ssh2');
 
 router.post('/create', function(req, res, next) {
+    let user = new User({
+        email: req.body.email,
+        password: req.body.password,
+        name: req.body.name
+    });
 
-    var name = req.body.name;
-  	var email = req.body.email;
-    var password = req.body.password;
-
-    if (!name || !name.first || !name.last || !email || !password) {
-        return res.status(400).json({ message: 'All those boxes need filling.' });
+    if (!user.name || !user.name.first || !user.name.last || !user.email || !user.password) {
+        return res.status(400).json({ message: 'Request body is incomplete' });
     }
 
     if(!validator.isEmail(email)) {
@@ -29,76 +45,47 @@ router.post('/create', function(req, res, next) {
     }
 
     email = email.toLowerCase();
-
-    var user = new User({
-        email: email,
-        password: password,
-        name: name
-    });
-    
     user.authToken = AuthToken.create(email, user._id);
     
-    var db = req.app.locals.db;
+    let db = req.app.locals.db;
     
-    db('user').insert({email: user.email, hash: user.hash, salt: user.salt, first_name: user.name.first, last_name: user.name.last, authToken: user.authToken}).then(function(inserts) {
-      console.log(inserts.length + ' new books saved.');
-    })
-    .catch(function(error) {
-      // If we get here, that means that neither the 'Old Books' catalogues insert,
-      // nor any of the books inserts will have taken place.
-      console.error(error);
-    });
+    db('user').insert({email: user.email, hash: user.hash, salt: user.salt, first_name: user.name.first, last_name: user.name.last, authToken: user.authToken})
+		.then(function(inserts) {
+			console.log(inserts.length + ' new user saved.');
+		})
+		.catch(function(error) {
+			console.error(error);
+		})
+	;
+
     return res.status(200).json(user.toObject({ virtuals: true }));
-    /*user.save(function(err, createdUser) {
-
-        if (err) {
-            
-        	if (err.errors && err.errors.email) {
-        		return res.status(400).json({ message: err.errors.email.message });
-        	}
-        	else {
-        		console.log(err);
-        		return res.status(500).json({ message: ErrorMessages.unknown });	
-        	}
-
-        } 
-        else {
-
-            return res.status(200).json(createdUser.toObject({ virtuals: true }));
-
-        }
-
-    });*/
-
 });
 
 router.get('/get', RouteAuth.protect, function(req, res, next) {
-    
     return res.status(200).json(req.user.toObject({ virtuals: true }));
-    
 });
 
 router.post('/login', function(req, res, next) {
-    
-    var email = req.body.email;
-    var password = req.body.password;
+    let email = req.body.email.toLowerCase();
+    let password = req.body.password;
 
     if(!password || !email) {
         return res.status(400).json({ message: "We need both an email and password." });
     }
     
-    email = email.toLowerCase();
-    var db = req.app.locals.db;
+    let db = req.app.locals.db;
 
-    db('user as u').innerJoin('user_has_role as uhr', 'u.guid', 'uhr.user_guid').innerJoin('role as r', 'uhr.role_guid', 'r.guid').where('u.email',email).then(function(user){
+	db('user as u').innerJoin('user_has_role as uhr', 'u.guid', 'uhr.user_guid')
+	.innerJoin('role as r', 'uhr.role_guid', 'r.guid')
+	.where('u.email',email).then(function(user){
         user = user[0];
         
         if (!user) {
             return res.status(400).json({ message: "Woops, wrong email or password." });
         } else {
-            var salt = new Buffer(user.salt, 'base64');
+            let salt = new Buffer(user.salt, 'base64');
             if(user.hash == crypto.pbkdf2Sync(password, salt, 10000, 64).toString('base64')){
-                var authToken = AuthToken.create(email, user._id);
+                let authToken = AuthToken.create(email, user._id);
                 db('user').where('email',email).update('authToken',authToken).then(function(inserts) {
                     return res.status(200).json({ 
                         message: "OK", 
@@ -129,19 +116,15 @@ router.post('/login', function(req, res, next) {
 });
 
 router.get('/:id', function(req, res, next) {
-    
-  var db = req.app.locals.db;
-  
-  var query = db('user').where({'guid': req.params.id});
+  let db = req.app.locals.db;
+  let query = db('user').where({'guid': req.params.id});
   
   if(req.query.status) {
       query.where('status', req.query.status);
   }
   
   query.then(function(user) {
-    
-    res.json(user);
-    
+res.json(user);
   });
     
 });
@@ -225,6 +208,74 @@ router.get('/:id/children', function(req, res, next) {
   }
 
   getChildren();
+});
+
+router.post('/image', upload.single('file'), function(req, res, next) {
+	let conn = new ssh2();
+
+	conn.on(
+		'connect',
+		function(){
+			console.log("- connected");
+		}
+	);
+	 
+	conn.on(
+		'ready',
+		function(){
+			console.log("- ready");
+	 
+			conn.sftp(
+				function(err, sftp){
+					if(err){
+						console.log("Error, problem starting SFTP: %s", err);
+					}
+	 
+					console.log("- SFTP started");
+	 
+					// upload file
+					let readStream = fs.createReadStream(req.file.path);
+					let writeStream = sftp.createWriteStream("user/"+req.body.id+".jpg");
+	 
+					// what to do when transfer finishes
+					writeStream.on(
+						'close',
+						function(){
+							console.log("- file transferred");
+							sftp.end();
+							res.status(200).send('file succesfully uploaded');
+							fs.unlinkSync(req.file.path);
+						}
+					);
+	 
+					// initiate transfer of file
+					readStream.pipe(writeStream);
+				}
+			);
+		}
+	);
+	 
+	conn.on(
+		'error',
+		function (err) {
+			console.log("- connection error: %s", err);
+			res.status(400).send('file upload fialed');
+		}
+	);
+	 
+	conn.on(
+		'end',
+		function(){
+			res.status(200).send('file succesfully uploaded');
+		}
+	);
+	 
+	conn.connect({
+		"host": "omejoopstour.timohoff.nl",
+		"port": 22,
+		"username": "omejoopstour",
+		"password": "aar04dappel"
+	});
 });
 
 module.exports = router;
