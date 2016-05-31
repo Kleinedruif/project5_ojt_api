@@ -41,4 +41,21 @@ router.get('/', function(req, res, next) {
 
 });
 
+router.get('/:id', function(req, res, next){
+    var db = req.app.locals.db;
+    var id = req.params.id;
+    
+    var query = query = db('participant as p').select("p.shirt" )
+                      .leftJoin("team as t", "t.guid", "p.team_guid")
+                      .leftJoin('participant_has_activity as pha', 'p.guid', 'pha.participant_guid')
+                      .sum('pha.score as score')
+                      .where('p.status', 'active')
+                      .where('t.status', 'active')
+                      .where('p.guid', id)
+      
+      query.then(function(score) {
+        res.json(score);
+      });   
+});
+
 module.exports = router;
