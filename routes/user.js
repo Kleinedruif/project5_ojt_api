@@ -202,7 +202,7 @@ router.get('/:id/children', function(req, res, next) {
         });
 
         //TODO find better way to call next after being done getting data
-        if(i==children.length-1) res.json(children);  
+        if(i==children.length-1) res.json(children);
       });
     }
   }
