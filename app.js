@@ -13,9 +13,6 @@ var app = express();
 var io = socket_io();
 app.io = io;
 
-//application config
-var Conf = require('./conf');
-
 var routes = require('./routes/index');
 var ranking = require('./routes/ranking');
 var login = require('./routes/login');
