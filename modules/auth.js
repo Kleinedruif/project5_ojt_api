@@ -63,8 +63,6 @@ module.exports = {
                 bcrypt.compare(password, user.hash, function(err, result) {
                     if (result) {
                         var authToken = crypto.randomBytes(64).toString('hex');
-
-						console.log(user.guid);
                         
                         db('user').where('email', email).update('authToken', authToken).then(function(inserts) {
                             return res.status(200).json({
