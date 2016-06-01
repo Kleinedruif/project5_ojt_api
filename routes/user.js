@@ -7,11 +7,8 @@ let router = express.Router();
 
 let path = require('path');
 let validator = require('validator');
-let User = require(path.resolve(__dirname, '../models/user-model'));
-let ErrorMessages = require(path.resolve(__dirname, '../util/error-messages'));
-let RouteAuth = require('../util/application-auth/route-auth');
-let AuthToken = require(path.resolve(__dirname, '../util/application-auth/auth-token'));
 let crypto = require('crypto');
+let auth = require('../modules/auth');
 
 let multer = require('multer'); // multipart/form-data middleware
 let storage = multer.diskStorage({
@@ -29,12 +26,12 @@ let upload = multer({ storage: storage });
 let fs = require('fs');
 let ssh2 = require('ssh2');
 
-router.post('/create', function (req, res, next) {
-    let user = new User({
-        email: req.body.email,
+router.post('/create', function(req, res, next) {
+    let user = {
+        email: req.body.email.toLowerCase(),
         password: req.body.password,
         name: req.body.name
-    });
+    };
 
     if (!user.name || !user.name.first || !user.name.last || !user.email || !user.password) {
         return res.status(400).json({ message: 'Request body is incomplete' });
@@ -45,8 +42,8 @@ router.post('/create', function (req, res, next) {
     }
 
     email = email.toLowerCase();
-    user.authToken = AuthToken.create(email, user._id);
-
+    user.authToken = crypto.randomBytes(64).toString('hex');
+    
     let db = req.app.locals.db;
 
     db('user').insert({ email: user.email, hash: user.hash, salt: user.salt, first_name: user.name.first, last_name: user.name.last, authToken: user.authToken })
@@ -61,7 +58,7 @@ router.post('/create', function (req, res, next) {
     return res.status(200).json(user.toObject({ virtuals: true }));
 });
 
-router.get('/get', RouteAuth.protect, function (req, res, next) {
+router.get('/get', auth.requireLoggedIn, function(req, res, next) {
     return res.status(200).json(req.user.toObject({ virtuals: true }));
 });
 
@@ -69,48 +66,11 @@ router.post('/login', function (req, res, next) {
     let email = req.body.email.toLowerCase();
     let password = req.body.password;
 
-    if (!password || !email) {
-        return res.status(400).json({ message: "We need both an email and password." });
+    if (!email || !password) {
+        return res.status(400).json({ message: "Vul alstublieft een email en een wachtwoord in." });
     }
 
-    let db = req.app.locals.db;
-
-    db('user as u').innerJoin('user_has_role as uhr', 'u.guid', 'uhr.user_guid')
-        .innerJoin('role as r', 'uhr.role_guid', 'r.guid')
-        .where('u.email', email).then(function (user) {
-            user = user[0];
-
-            if (!user) {
-                return res.status(400).json({ message: "Woops, wrong email or password." });
-            } else {
-                let salt = new Buffer(user.salt, 'base64');
-                if (user.hash == crypto.pbkdf2Sync(password, salt, 10000, 64).toString('base64')) {
-                    let authToken = AuthToken.create(email, user._id);
-                    db('user').where('email', email).update('authToken', authToken).then(function (inserts) {
-                        return res.status(200).json({
-                            message: "OK",
-                            authToken: authToken,
-
-                            // User data
-                            guid: user.guid,
-                            team_guid: user.team_guid,
-                            status: user.status,
-                            email: user.email,
-                            first_name: user.first_name,
-                            last_name: user.last_name,
-                            role_guid: user.role_guid,
-                            role_name: user.name             // Role name
-                        });
-                    })
-                        .catch(function (error) {
-                            return res.status(500).json({ message: error });
-                        });
-                } else {
-                    return res.status(400).json({ message: 'Invalid Credentials' });
-                }
-            }
-        });
-
+    auth.login(req, res, email, password);
 });
 
 router.get('/:id', function (req, res, next) {
@@ -124,6 +84,7 @@ router.get('/:id', function (req, res, next) {
     query.then(function (user) {
         res.json(user);
     });
+});
 
 });
 
@@ -131,8 +92,11 @@ router.get('/:id/children', function (req, res, next) {
     let db = req.app.locals.db;
 
     let getChildren = function () {
-        let query = db('participant as p').select('p.*')
+        let query = db('participant as p').select('p.*', 't.name', 'ul.first_name as first_name_teamleader', 'ul.last_name as last_name_teamleader', 'ul.guid as guid_teamleader', 'uo.first_name as first_name_parent', 'uo.last_name as last_name_parent', 'uo.address', 'uo.city', 'uo.tel_nr', 'uo.email')
             .innerJoin('participant_parent as pp', 'p.guid', 'pp.participant_guid')
+            .innerJoin('team as t', 't.guid', 'p.team_guid')
+            .innerJoin('user as ul', 'ul.guid', 't.teamleader_guid')
+            .innerJoin('user as uo', 'uo.guid', 'pp.parent_guid')
             .where('pp.parent_guid', req.params.id)
             .groupBy('p.guid');
 
