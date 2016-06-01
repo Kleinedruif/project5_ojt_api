@@ -86,8 +86,6 @@ router.get('/:id', function (req, res, next) {
     });
 });
 
-});
-
 router.get('/:id/children', function (req, res, next) {
     let db = req.app.locals.db;
 
