@@ -3,7 +3,6 @@ var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
-var session = require('express-session');
 var bodyParser = require('body-parser');
 var socket_io = require('socket.io');
 
@@ -28,8 +27,7 @@ app.set('view engine', 'jade');
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
-app.use(cookieParser('447qQdi6QdhOqYoLKB8Gg9phuAX6Y5ulLbRUofya'));
-app.use(session({secret: '447qQdi6QdhOqYoLKB8Gg9phuAX6Y5ulLbRUofya', resave: false, saveUninitialized: false}));
+app.use(cookieParser());
 app.use(bodyParser.json());
 //app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.urlencoded({
