@@ -20,7 +20,7 @@ module.exports = function(io) {
         var clientToken = key.decrypt(handshake._query.token, 'base64', 'utf8');
         
         // Check if token and domain is valid
-        if (clientToken == webserverConfig.webserver_token && handshake.connection._peername.address.indexOf(webserver_ip) >= 0){
+        if (clientToken == webserverConfig.webserver_token /*&& handshake.connection._peername.address.indexOf(webserver_ip) >= 0*/){
             // Set connection is true and move on to the connection part
             callback(null, true);
         } else {
