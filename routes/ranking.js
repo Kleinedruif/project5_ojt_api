@@ -54,7 +54,6 @@ router.get('/:id', function(req, res, next){
                       .where('p.guid', id)
       
     query.then(function(individualScore) {
-        console.log(individualScore[0].team_guid);
         query = db('participant as p')
                             .innerJoin('participant_has_activity as pha', 'p.guid', 'pha.participant_guid')
                             .sum('pha.score as scores')
