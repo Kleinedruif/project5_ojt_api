@@ -60,4 +60,57 @@ router.get('/:id/team', function (req, res, next) {
 
 });
 
+router.get('/:id/score', function(req, res, next) {
+    
+    var id = req.params.id;
+    var type = req.query.type;
+    var db = req.app.locals.db;
+    var query = db('participant_has_activity as pha').where('pha.participant_guid', id)
+                .innerJoin('participant as p', 'pha.participant_guid', 'p.guid')
+                .select('p.first_name', 'p.last_name', 'pha.participant_guid', 'pha.score');
+    
+    if(type == "total") {
+        query.sum('pha.score as score');
+    } else {
+        query.select('pha.activity_guid');
+    }
+    
+    query.then(function(score) {
+        res.json(score);
+    })
+    
+    
+});
+
+router.put('/:id/score', function(req, res, next) {
+   
+   var activity = req.body.activity_guid;
+   var score = req.body.score;
+   var id = req.params.id;
+   
+   if(activity && score) {
+       
+       var db = req.app.locals.db;
+       var query = db('participant_has_activity')
+                   .where({
+                       participant_guid: id,
+                       activity_guid: activity
+                   }).update({
+                       score: score
+                   });
+        
+        query.then(function(success) {
+            if(success == 0) {
+                res.json({error: "Activity or participant does not exist!"});
+            } else {
+                res.json({success: "OK"});
+            }
+        });
+       
+   } else {
+       res.json({error: "Missing data!"});
+   }
+
+});
+
 module.exports = router;
