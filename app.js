@@ -42,9 +42,7 @@ var socket = require('./modules/socket')(app.io);
 // Set a database (and query builder) to use globally
 app.locals.db = require('./modules/database');
 
-//app.use('/api', require('./api-manifest'));
-
-
+// Routes
 app.use('/messages', messages); // Put this before the default /user
 app.use('/user', user);
 app.use('/participant', participant);
