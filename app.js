@@ -20,6 +20,7 @@ var user = require('./routes/user');
 var team = require('./routes/team');
 var messages = require('./routes/messages')(app.io);
 var participant = require('./routes/participant');
+var score = require('./routes/score');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -49,6 +50,7 @@ app.locals.db = require('./modules/database');
 app.use('/messages', messages); // Put this before the default /user
 app.use('/user', user);
 app.use('/participant', participant);
+app.use('/score', score);
 app.use('/ranking', ranking);
 app.use('/team', team);
 app.use('/', routes);
