@@ -33,7 +33,7 @@ router.get('/', function(req, res, next) {
       }    
       
       query.then(function(score) {
-        res.json(score);
+          res.json(score);
       });   
   } else {
       return res.json({'message': 'type not set'});
@@ -45,17 +45,26 @@ router.get('/:id', function(req, res, next){
     var db = req.app.locals.db;
     var id = req.params.id;
     
-    var query = query = db('participant as p').select("p.shirt" )
-                      .leftJoin("team as t", "t.guid", "p.team_guid")
-                      .leftJoin('participant_has_activity as pha', 'p.guid', 'pha.participant_guid')
+    var query = query = db('participant as p').select('p.shirt', 'p.team_guid')
+                      .leftJoin('team as t', 't.guid', 'p.team_guid')
+                      .leftJoin('participant_has_activity as pha', 'p.guid', 'pha.participant_guid') 
                       .sum('pha.score as score')
                       .where('p.status', 'active')
                       .where('t.status', 'active')
                       .where('p.guid', id)
       
-      query.then(function(score) {
-        res.json(score);
-      });   
+    query.then(function(individualScore) {
+        console.log(individualScore[0].team_guid);
+        query = db('participant as p')
+                            .innerJoin('participant_has_activity as pha', 'p.guid', 'pha.participant_guid')
+                            .sum('pha.score as scores')
+                            .where('p.status', 'active')
+                            .where('p.team_guid', individualScore[0].team_guid)
+                            
+        query.then(function(team_score) {
+            res.json({score: individualScore[0].score, shirt: individualScore[0].shirt, team_guid: individualScore[0].team_guid, team_score: team_score[0].scores});
+        });  
+    });   
 });
 
 module.exports = router;
