@@ -3,8 +3,8 @@ var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
+var session = require('express-session');
 var bodyParser = require('body-parser');
-var mongoose = require('mongoose');
 var socket_io = require('socket.io');
 
 var app = express();
@@ -12,9 +12,6 @@ var app = express();
 // Socket.io
 var io = socket_io();
 app.io = io;
-
-//application config
-var Conf = require('./conf');
 
 var routes = require('./routes/index');
 var ranking = require('./routes/ranking');
@@ -31,13 +28,14 @@ app.set('view engine', 'jade');
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
+app.use(cookieParser('447qQdi6QdhOqYoLKB8Gg9phuAX6Y5ulLbRUofya'));
+app.use(session({secret: '447qQdi6QdhOqYoLKB8Gg9phuAX6Y5ulLbRUofya', resave: false, saveUninitialized: false}));
 app.use(bodyParser.json());
 //app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.urlencoded({
 	extended: true,
 	limit: 100000000 
 }));
-app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Setup socket
