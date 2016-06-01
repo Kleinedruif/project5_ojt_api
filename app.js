@@ -4,7 +4,6 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-var mongoose = require('mongoose');
 var socket_io = require('socket.io');
 
 var app = express();
@@ -28,13 +27,13 @@ app.set('view engine', 'jade');
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
+app.use(cookieParser());
 app.use(bodyParser.json());
 //app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.urlencoded({
     extended: true,
     limit: 100000000
 }));
-app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Setup socket
@@ -43,9 +42,7 @@ var socket = require('./modules/socket')(app.io);
 // Set a database (and query builder) to use globally
 app.locals.db = require('./modules/database');
 
-//app.use('/api', require('./api-manifest'));
-
-
+// Routes
 app.use('/messages', messages); // Put this before the default /user
 app.use('/user', user);
 app.use('/participant', participant);
