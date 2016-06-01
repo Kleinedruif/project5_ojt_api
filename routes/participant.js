@@ -82,7 +82,7 @@ router.get('/:id/score', function(req, res, next) {
     
 });
 
-router.post('/:id/score', function(req, res, next) {
+router.put('/:id/score', function(req, res, next) {
    
    var activity = req.body.activity_guid;
    var score = req.body.score;
