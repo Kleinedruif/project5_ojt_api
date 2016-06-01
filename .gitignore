@@ -4,3 +4,4 @@ jsconfig.json
 /uploads
 /.vscode
 .editorconfig
+npm-debug.log
