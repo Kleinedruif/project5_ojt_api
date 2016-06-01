@@ -131,8 +131,11 @@ router.get('/:id/children', function (req, res, next) {
     let db = req.app.locals.db;
 
     let getChildren = function () {
-        let query = db('participant as p').select('p.*')
+        let query = db('participant as p').select('p.*', 't.name', 'ul.first_name as first_name_teamleader', 'ul.last_name as last_name_teamleader', 'ul.guid as guid_teamleader', 'uo.first_name as first_name_parent', 'uo.last_name as last_name_parent', 'uo.address', 'uo.city', 'uo.tel_nr', 'uo.email')
             .innerJoin('participant_parent as pp', 'p.guid', 'pp.participant_guid')
+            .innerJoin('team as t', 't.guid', 'p.team_guid')
+            .innerJoin('user as ul', 'ul.guid', 't.teamleader_guid')
+            .innerJoin('user as uo', 'uo.guid', 'pp.parent_guid')
             .where('pp.parent_guid', req.params.id)
             .groupBy('p.guid');
 
