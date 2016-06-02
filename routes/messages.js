@@ -25,16 +25,20 @@ module.exports = function(io) {
         });
     });
 
+	// get messages with contact
 	//TODO make route '/contact/:id' or '/:id'
     router.get('/:id/contact/:contactId', function(req, res, next){
         var db = req.app.locals.db;
 
+		var offset = parseInt(req.query.offset);
+		
         var query = db('message as m')
             .where('m.receiver_guid', req.params.id)
 			.andWhere('m.sender_guid', req.params.contactId)
             .orWhere('m.receiver_guid', req.params.contactId)
             .andWhere('m.sender_guid', req.params.id)
-            .orderBy('m.date', 'ASC');
+            .orderBy('m.date', 'ASC')
+			.offset(offset);
 
         query.then(function (messages) {
             res.json(messages);
@@ -50,7 +54,7 @@ module.exports = function(io) {
             .innerJoin('role as r2', 'uhr.role_guid', 'r2.guid')
             .leftJoin('user as u', 'u.guid', 'uhr.user_guid')
             .where('r.name', req.params.role)
-            .orderBy('u.first_name', 'ASC');
+            .orderBy('u.first_name', 'ASC')
 
         query.then(function (contacts) {
             res.json(contacts);
