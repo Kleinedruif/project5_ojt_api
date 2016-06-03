@@ -55,7 +55,7 @@ router.get('/:id/participants', function (req, res, next) {
 
 });
 
-router.get('/:id/notes', function(req, res, next) {
+router.get('/:id/note', function(req, res, next) {
     
     var id = req.params.id;
     var type = req.query.type;
@@ -66,8 +66,8 @@ router.get('/:id/notes', function(req, res, next) {
         query.where('private', (type == "private" ? 1 : 0));
     }
     
-    query.then(function(note) {
-       res.json(note); 
+    query.then(function(notes) {
+       res.json(notes); 
     });
     
 });
