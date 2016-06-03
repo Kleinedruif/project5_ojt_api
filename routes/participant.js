@@ -99,11 +99,11 @@ router.put('/:id/score', function(req, res, next) {
                        score: score
                    });
         
-        query.then(function(success) {
-            if(success == 0) {
+        query.then(function(message) {
+            if(message == 0) {
                 res.json({error: "Activity or participant does not exist!"});
             } else {
-                res.json({success: "OK"});
+                res.json({message: "OK"});
             }
         });
        
@@ -113,7 +113,7 @@ router.put('/:id/score', function(req, res, next) {
 
 });
 
-router.get('/:id/note', function(req, res, next) {
+router.get('/:id/notes', function(req, res, next) {
     
     var id = req.params.id;
     var type = req.query.type;
@@ -139,24 +139,24 @@ router.post('/:id/note', function(req, res, next) {
    
    if(content && type) {
        
-       var typeNumerical = (type == "private" ? 1 : 0);
+       var typeNumerical = (type == 'private' ? 1 : 0);
        var query = db('note')
                    .insert({
                       guid: "",
                       participant_guid: id,
                       private: typeNumerical,
                       content: content,
-                      status: "active" 
+                      status: 'active' 
                    });
        
-       query.then(function(success) {
-           res.json({success: "OK"});
+       query.then(function(message) {
+           res.json({message: 'OK'});
        });
        
        
        
    } else {
-       res.json({error: "No content set!"});
+       res.status(400).send("No content set!");
    }
     
 });
