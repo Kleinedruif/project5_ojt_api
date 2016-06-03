@@ -20,9 +20,14 @@ module.exports = function(io) {
             .orWhere('m.sender_guid', req.params.id)
             .orderBy('m.date', 'ASC');
 
-        query.then(function (messages) {
+        query
+		.then(function (messages) {
             res.json(messages);
-        });
+        })
+		.catch(function(err){
+			console.error(error);
+			res.status(400).json(error);
+		})
     });
 
 	// get messages with contact
@@ -40,9 +45,14 @@ module.exports = function(io) {
             .orderBy('m.date', 'ASC')
 			.offset(offset);
 
-        query.then(function (messages) {
+        query
+		.then(function (messages) {
             res.json(messages);
-        });
+        })
+		.catch(function(err){
+			console.error(error);
+			res.status(400).json(error);
+		})
     });
 
     router.get('/:role/contacts', function(req, res, next){
@@ -56,9 +66,14 @@ module.exports = function(io) {
             .where('r.name', req.params.role)
             .orderBy('u.first_name', 'ASC')
 
-        query.then(function (contacts) {
+        query
+		.then(function (contacts) {
             res.json(contacts);
-        });
+        })
+		.catch(function(err){
+			console.error(error);
+			res.status(400).json(error);
+		})
     });
 
     router.post('/', function(req, res, next){
