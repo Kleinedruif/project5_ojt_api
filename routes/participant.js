@@ -99,8 +99,8 @@ router.put('/:id/score', function(req, res, next) {
                        score: score
                    });
         
-        query.then(function(message) {
-            if(message == 0) {
+        query.then(function(success) {
+            if(success == 0) {
                 res.json({error: "Activity or participant does not exist!"});
             } else {
                 res.json({message: "OK"});
