@@ -86,6 +86,23 @@ router.get('/:id', function (req, res, next) {
     });
 });
 
+router.get('/:id/note', function(req, res, next) {
+    
+    var id = req.params.id;
+    var type = req.query.type;
+    var db = req.app.locals.db;
+    var query = db('note').where('user_guid', id);
+    
+    if(type) {
+        query.where('private', (type == "private" ? 1 : 0));
+    }
+    
+    query.then(function(note) {
+       res.json(note); 
+    });
+    
+});
+
 router.get('/:id/children', function (req, res, next) {
     let db = req.app.locals.db;
 

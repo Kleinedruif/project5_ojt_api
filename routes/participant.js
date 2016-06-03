@@ -113,4 +113,21 @@ router.put('/:id/score', function(req, res, next) {
 
 });
 
+router.get('/:id/note', function(req, res, next) {
+    
+    var id = req.params.id;
+    var type = req.query.type;
+    var db = req.app.locals.db;
+    var query = db('note').where('participant_guid', id);
+    
+    if(type) {
+        query.where('private', (type == "private" ? 1 : 0));
+    }
+    
+    query.then(function(note) {
+       res.json(note); 
+    });
+    
+});
+
 module.exports = router;
