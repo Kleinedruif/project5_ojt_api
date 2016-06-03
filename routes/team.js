@@ -1,8 +1,9 @@
 var express = require('express');
 var router = express.Router();
+var auth = require('../modules/auth');
 
 /* GET home page. */
-router.get('/', function (req, res, next) {
+router.get('/', auth.requireLoggedIn, auth.requireRole('teamleider'), function (req, res, next) {
 
     var db = req.app.locals.db;
 
@@ -19,7 +20,7 @@ router.get('/', function (req, res, next) {
     });
 });
 
-router.get('/:id', function (req, res, next) {
+router.get('/:id', auth.requireLoggedIn, auth.requireRole('teamleider'), function (req, res, next) {
 
     var db = req.app.locals.db;
 
@@ -37,7 +38,7 @@ router.get('/:id', function (req, res, next) {
 
 });
 
-router.get('/:id/participants', function (req, res, next) {
+router.get('/:id/participants', auth.requireLoggedIn, auth.requireRole('teamleider'), function (req, res, next) {
 
     var db = req.app.locals.db;
 

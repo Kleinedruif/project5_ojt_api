@@ -14,7 +14,6 @@ app.io = io;
 
 var routes = require('./routes/index');
 var ranking = require('./routes/ranking');
-var login = require('./routes/login');
 var user = require('./routes/user');
 var team = require('./routes/team');
 var messages = require('./routes/messages')(app.io);
@@ -64,7 +63,7 @@ app.use(function (req, res, next) {
 if (app.get('env') === 'development') {
     app.use(function (err, req, res, next) {
         res.status(err.status || 500);
-        res.render('error', {
+        return res.render('error', {
             message: err.message,
             error: err
         });
@@ -75,7 +74,7 @@ if (app.get('env') === 'development') {
 // no stacktraces leaked to user
 app.use(function (err, req, res, next) {
     res.status(err.status || 500);
-    res.render('error', {
+    return res.render('error', {
         message: err.message,
         error: {}
     });

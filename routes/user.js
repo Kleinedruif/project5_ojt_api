@@ -26,7 +26,7 @@ let upload = multer({ storage: storage });
 let fs = require('fs');
 let ssh2 = require('ssh2');
 
-router.post('/create', function(req, res, next) {
+router.post('/create', auth.requireLoggedIn, auth.requireRole('ouder'), function(req, res, next) {
     let user = {
         email: req.body.email.toLowerCase(),
         password: req.body.password,
@@ -46,21 +46,33 @@ router.post('/create', function(req, res, next) {
     
     let db = req.app.locals.db;
 
-    db('user').insert({ email: user.email, hash: user.hash, salt: user.salt, first_name: user.name.first, last_name: user.name.last, authToken: user.authToken })
+    db('user').insert({ email: user.email, hash: user.hash, salt: user.salt, first_name: user.name.first, last_name: user.name.last, authToken: user.authToken, token_experation: getCurrentDate() })
         .then(function (inserts) {
             console.log(inserts.length + ' new user saved.');
         })
         .catch(function (error) {
             console.error(error);
-        })
-        ;
+        });
 
     return res.status(200).json(user.toObject({ virtuals: true }));
 });
 
-router.get('/get', auth.requireLoggedIn, function(req, res, next) {
-    return res.status(200).json(req.user.toObject({ virtuals: true }));
-});
+function getCurrentDate(){
+     // Get current data in the right formate
+    var d = new Date,
+        dformat = [d.getMonth() + 1,
+            d.getDate(),
+            d.getFullYear()].join('/') + ' ' +
+            [d.getHours(),
+                d.getMinutes(),
+                d.getSeconds()].join(':');
+    return d;
+}
+
+/* TODO, what is this function? */
+// router.get('/get', auth.requireLoggedIn, function(req, res, next) {
+//     return res.status(200).json(req.user.toObject({ virtuals: true }));
+// });
 
 router.post('/login', function (req, res, next) {
     let email = req.body.email.toLowerCase();
@@ -73,7 +85,7 @@ router.post('/login', function (req, res, next) {
     auth.login(req, res, email, password);
 });
 
-router.get('/:id', function (req, res, next) {
+router.get('/:id', auth.requireLoggedIn, auth.requireRole('organisatie'), function (req, res, next) {
     let db = req.app.locals.db;
     let query = db('user').where({ 'guid': req.params.id });
 
@@ -86,7 +98,7 @@ router.get('/:id', function (req, res, next) {
     });
 });
 
-router.get('/:id/children', function (req, res, next) {
+router.get('/:id/children', auth.requireLoggedIn, auth.requireRole('ouder'), function (req, res, next) {
     let db = req.app.locals.db;
 
     let getChildren = function () {
@@ -106,6 +118,7 @@ router.get('/:id/children', function (req, res, next) {
     }
 
     let getTraits = function (children) {
+        if (children.length == 0) return res.json({message: 'Geen kinderen gevonden'});
         for (let i = 0; i < children.length; i++) {
             let query = db('participant_trait as pt').select('pt.trait')
                 .where('pt.participant_guid', children[i].guid);
@@ -165,7 +178,7 @@ router.get('/:id/children', function (req, res, next) {
     getChildren();
 });
 
-router.post('/image', upload.single('file'), function (req, res, next) {
+router.post('/image', upload.single('file'), auth.requireLoggedIn, auth.requireRole('teamleider'), function (req, res, next) {
     let conn = new ssh2();
 
     conn.on(
