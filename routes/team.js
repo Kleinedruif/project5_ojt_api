@@ -55,4 +55,62 @@ router.get('/:id/participants', function (req, res, next) {
 
 });
 
+router.get('/:id/score', function(req, res, next) {
+    
+    var id = req.params.id;
+    var type = req.query.type;
+    var db = req.app.locals.db;
+    var query = db("team as t").where('t.guid', id)
+                .innerJoin('participant as p', 't.guid', 'p.team_guid')
+                .innerJoin('participant_has_activity as pha', 'p.guid', 'pha.participant_guid')
+                .select('t.name as team_name', 'p.first_name', 'p.last_name', 'p.guid as participant_guid', 'pha.score');
+    
+    if(type == "total") {
+        query.sum('pha.score as score').groupBy('p.guid');
+    } else {
+        query.select('pha.activity_guid');
+    }
+    
+    query.then(function(score) {
+        res.json(score);
+    })
+    
+    
+});
+
+router.put('/:id/score', function(req, res, next) {
+   
+   var activity = req.body.activity_guid;
+   var score = req.body.score;
+   var id = req.params.id;
+   
+   if(activity && score) {
+       
+       var db = req.app.locals.db;
+       var query = db('team as t')
+                   .innerJoin('participant as p', 't.guid', 'p.team_guid')
+                   .innerJoin('participant_has_activity as pha', 'p.guid', 'pha.participant_guid')
+                   .where({
+                       't.guid': id,
+                       'pha.activity_guid': activity
+                   }).update({
+                       'pha.score': score
+                   });
+        
+        query.then(function(success) {
+            if(success == 0) {
+                res.json({error: "Activity or team does not exist!"});
+            } else {
+                res.json({success: "OK"});
+            }
+        });
+       
+   } else {
+       res.json({error: "Missing data!"});
+   }
+
+});
+
+
+
 module.exports = router;
