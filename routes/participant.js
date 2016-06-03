@@ -130,4 +130,35 @@ router.get('/:id/note', function(req, res, next) {
     
 });
 
+router.post('/:id/note', function(req, res, next) {
+   
+   var id = req.params.id;
+   var content = req.body.content;
+   var type = req.body.type;
+   var db = req.app.locals.db;
+   
+   if(content && type) {
+       
+       var typeNumerical = (type == "private" ? 1 : 0);
+       var query = db('note')
+                   .insert({
+                      guid: "",
+                      participant_guid: id,
+                      private: typeNumerical,
+                      content: content,
+                      status: "active" 
+                   });
+       
+       query.then(function(success) {
+           res.json({success: "OK"});
+       });
+       
+       
+       
+   } else {
+       res.json({error: "No content set!"});
+   }
+    
+});
+
 module.exports = router;
