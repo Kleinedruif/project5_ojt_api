@@ -50,9 +50,10 @@ module.exports = {
         email = email.trim();
         password = password.trim();
         
-        db('user as u').innerJoin('user_has_role as uhr', 'u.guid', 'uhr.user_guid')
+        db('user as u').select('u.*', 'r.guid as role_guid', 'r.name as role_name')
+					   .innerJoin('user_has_role as uhr', 'u.guid', 'uhr.user_guid')
                        .innerJoin('role as r', 'uhr.role_guid', 'r.guid')
-                       .where('u.email',email)
+                       .where('u.email', email)
                        .then(function(user){
             user = user[0];
             
@@ -76,7 +77,7 @@ module.exports = {
                                 first_name: user.first_name,
                                 last_name: user.last_name,
                                 role_guid: user.role_guid,
-                                role_name: user.name             // Role name
+                                role_name: user.role_name             // Role name
                             });
                         })
                         .catch(function(error) {
