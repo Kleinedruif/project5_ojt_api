@@ -55,11 +55,58 @@ router.get('/:id/participants', function (req, res, next) {
 
 });
 
-router.get('/:id/score', function(req, res, next) {
+router.get('/:id/note', function(req, res, next) {
     
     var id = req.params.id;
     var type = req.query.type;
     var db = req.app.locals.db;
+    var query = db('note').where('team_guid', id);
+    
+    if(type) {
+        query.where('private', (type == 'private' ? 1 : 0));
+    }
+    
+    query.then(function(notes) {
+       res.json(notes); 
+    });
+    
+});
+
+router.post('/:id/note', function(req, res, next) {
+   
+   var id = req.params.id;
+   var content = req.body.content;
+   var type = req.body.type;
+   var db = req.app.locals.db;
+   
+   if(content && type) {
+       
+       var typeNumerical = (type == 'private' ? 1 : 0);
+       var query = db('note')
+                   .insert({
+                      guid: "",
+                      team_guid: id,
+                      private: typeNumerical,
+                      content: content,
+                      status: 'active' 
+                   });
+       
+       query.then(function(message) {
+           res.json({message: 'OK'});
+       });
+       
+       
+       
+   } else {
+       res.status(400).send('No content set!');
+   }
+    
+});
+
+router.get('/:id/score', function(req, res, next) {
+    
+    var db = req.app.locals.db;
+    
     var query = db("team as t").where('t.guid', id)
                 .innerJoin('participant as p', 't.guid', 'p.team_guid')
                 .innerJoin('participant_has_activity as pha', 'p.guid', 'pha.participant_guid')
@@ -110,7 +157,5 @@ router.put('/:id/score', function(req, res, next) {
    }
 
 });
-
-
 
 module.exports = router;
