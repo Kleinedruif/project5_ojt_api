@@ -19,9 +19,10 @@ module.exports = {
                 return res.status(500).json({ message: 'Deze token is niet valid' });
             } else {
                 var timeDiff = getCurrentDate() - user[0].token_experation;
-                // Session off 1 day
+                // Session off 1 day and if token has expired
                 if (timeDiff > 86400000) return res.status(417).json({message: 'Token is niet meer valid, log opnieuw in'});
                             
+                // Set the role on the request
                 req.role = user[0].name;
                 return next(); 
             }           
@@ -60,10 +61,10 @@ module.exports = {
                        .then(function(user){
             user = user[0];
             
-            if (!user) {                     
+            if (!user) {              
                 var fail = onLoginFail(req.connection.remoteAddress);
+                // Check if user is allowed to login       
                 if (fail && Date.now() < fail.nextTry) {
-                    // Throttled. Can't try yet.
                     return res.status(429).json({message: 'Te vaak geprobeerd opnieuw in te loggen, probeer het over 10 minuten nogmaals'});
                 } else {
                     return res.status(401).json({message: 'U heeft een verkeerde email of wachtwoord ingevuld.' });
@@ -128,6 +129,7 @@ function getCurrentDate(){
     return d;
 }
 
+// Stores all the failed logins for a max of 30 min
 var failures = {};
 
 function onLoginFail(ip) {
@@ -145,7 +147,7 @@ function onLoginFail(ip) {
 
 function onLoginSuccess(ip) { delete failures[ip]; }
 
-// Clear log every 10 min
+// Clear log every 30 min
 var MINS10 = 600000, MINS30 = 1 * MINS10;
 setInterval(function() {
     for (var ip in failures) {
