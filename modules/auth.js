@@ -9,7 +9,7 @@ module.exports = {
             return res.status(401).json({message: 'U moet ingelogd zijn om deze pagina te bezoeken.'});
         } else if (!req.query.api_key){
             return res.status(401).json({message: 'No api key given.'});
-        } else if (req.query.api_key != config.webserver_api_key){
+        } else if (req.query.api_key != config.webserver_api_key && req.query.api_key != config.app_api_key){
             return res.status(401).json({message: 'Invallid api key.'});
         }
         
