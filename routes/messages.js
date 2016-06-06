@@ -21,9 +21,39 @@ module.exports = function(io) {
             .orWhere('m.sender_guid', req.params.id)
             .orderBy('m.date', 'ASC');
 
-        query.then(function (messages) {
+        query
+		.then(function (messages) {
             res.json(messages);
-        });
+        })
+		.catch(function(err){
+			console.error(error);
+			res.status(400).json(error);
+		})
+    });
+
+	// get messages with contact
+	//TODO make route '/contact/:id' or '/:id'
+    router.get('/:id/contact/:contactId', function(req, res, next){
+        var db = req.app.locals.db;
+
+		var offset = parseInt(req.query.offset);
+		
+        var query = db('message as m')
+            .where('m.receiver_guid', req.params.id)
+			.andWhere('m.sender_guid', req.params.contactId)
+            .orWhere('m.receiver_guid', req.params.contactId)
+            .andWhere('m.sender_guid', req.params.id)
+            .orderBy('m.date', 'ASC')
+			.offset(offset);
+
+        query
+		.then(function (messages) {
+            res.json(messages);
+        })
+		.catch(function(err){
+			console.error(error);
+			res.status(400).json(error);
+		})
     });
 
     router.get('/:role/contacts', auth.requireLoggedIn, auth.requireRole('ouder'), function(req, res, next){
@@ -35,11 +65,16 @@ module.exports = function(io) {
             .innerJoin('role as r2', 'uhr.role_guid', 'r2.guid')
             .leftJoin('user as u', 'u.guid', 'uhr.user_guid')
             .where('r.name', req.params.role)
-            .orderBy('u.first_name', 'ASC');
+            .orderBy('u.first_name', 'ASC')
 
-        query.then(function (contacts) {
+        query
+		.then(function (contacts) {
             res.json(contacts);
-        });
+        })
+		.catch(function(err){
+			console.error(error);
+			res.status(400).json(error);
+		})
     });
 
     router.post('/', auth.requireLoggedIn, auth.requireRole('ouder'), function(req, res, next){
@@ -47,12 +82,15 @@ module.exports = function(io) {
 
         // Get current data in the right formate
         var d = new Date,
-            dformat = [d.getMonth() + 1,
+            dformat = [
+				d.getMonth() + 1,
                 d.getDate(),
-                d.getFullYear()].join('/') + ' ' +
-                [d.getHours(),
-                    d.getMinutes(),
-                    d.getSeconds()].join(':');
+                d.getFullYear()
+			].join('/') + ' ' + [
+				d.getHours(),
+				d.getMinutes(),
+				d.getSeconds()
+			].join(':');
 
         // Insert message   
         db('message').insert({
@@ -62,16 +100,17 @@ module.exports = function(io) {
             body: req.body.body,
             date: d
         })
-            .then(function (inserts) {
-                console.log('new message saved');
+		.then(function (inserts) {
+			console.log('new message saved');
 
-                // Emit to all sockets the newly recieved message, to webserver knows were to send it to based on the receiver_guid
-                io.sockets.send({ receiver_guid: req.body.receiverId, sender_guid: req.body.senderId, body: req.body.body });
-                res.status(200).json(inserts);//user.toObject({ virtuals: true }));
-            })
-            .catch(function (error) {
-                console.error(error);
-            });
+			// Emit to all sockets the newly recieved message, to webserver knows were to send it to based on the receiver_guid
+			io.sockets.send({ receiver_guid: req.body.receiverId, sender_guid: req.body.senderId, body: req.body.body });
+			res.status(200).json(inserts);//user.toObject({ virtuals: true }));
+		})
+		.catch(function (error) {
+			console.error(error);
+			res.status(400).json(error);
+		});
     });
 
     return router;

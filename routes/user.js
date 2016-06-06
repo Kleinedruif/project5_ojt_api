@@ -98,6 +98,50 @@ router.get('/:id', auth.requireLoggedIn, auth.requireRole('organisatie'), functi
     });
 });
 
+router.get('/:id/note', auth.requireLoggedIn, auth.requireRole('ouder'), function(req, res, next) {   
+    var id = req.params.id;
+    var type = req.query.type;
+    var db = req.app.locals.db;
+    var query = db('note').where('user_guid', id);
+    
+    if(type) {
+        query.where('private', (type == 'private' ? 1 : 0));
+    }
+    
+    query.then(function(notes) {
+       res.json(notes); 
+    });
+    
+});
+
+router.post('/:id/note', auth.requireLoggedIn, auth.requireRole('teamleider'), function(req, res, next) { 
+   var id = req.params.id;
+   var content = req.body.content;
+   var type = req.body.type;
+   var db = req.app.locals.db;
+   
+   if(content && type) {
+       
+       var typeNumerical = (type == 'private' ? 1 : 0);
+       var query = db('note')
+                   .insert({
+                      guid: "",
+                      user_guid: id,
+                      private: typeNumerical,
+                      content: content,
+                      status: 'active' 
+                   });
+       
+       query.then(function(message) {
+           res.json({message: 'OK'});
+       });
+             
+   } else {
+       res.status(400).send('No content set!');
+   }
+    
+});
+
 router.get('/:id/children', auth.requireLoggedIn, auth.requireRole('ouder'), function (req, res, next) {
     let db = req.app.locals.db;
 

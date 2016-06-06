@@ -100,11 +100,11 @@ router.put('/:id/score', auth.requireLoggedIn, auth.requireRole('teamleider'), f
                        score: score
                    });
         
-        query.then(function(success) {
-            if(success == 0) {
+        query.then(function(message) {
+            if(message == 0) {
                 res.json({error: "Activity or participant does not exist!"});
             } else {
-                res.json({success: "OK"});
+                res.json({message: "OK"});
             }
         });
        
@@ -112,6 +112,54 @@ router.put('/:id/score', auth.requireLoggedIn, auth.requireRole('teamleider'), f
        res.json({error: "Missing data!"});
    }
 
+});
+
+router.get('/:id/note', function(req, res, next) {
+    
+    var id = req.params.id;
+    var type = req.query.type;
+    var db = req.app.locals.db;
+    var query = db('note').where('participant_guid', id);
+    
+    if(type) {
+        query.where('private', (type == "private" ? 1 : 0));
+    }
+    
+    query.then(function(notes) {
+       res.json(notes); 
+    });
+    
+});
+
+router.post('/:id/note', function(req, res, next) {
+   
+   var id = req.params.id;
+   var content = req.body.content;
+   var type = req.body.type;
+   var db = req.app.locals.db;
+   
+   if(content && type) {
+       
+       var typeNumerical = (type == 'private' ? 1 : 0);
+       var query = db('note')
+                   .insert({
+                      guid: "",
+                      participant_guid: id,
+                      private: typeNumerical,
+                      content: content,
+                      status: 'active' 
+                   });
+       
+       query.then(function(message) {
+           res.json({message: 'OK'});
+       });
+       
+       
+       
+   } else {
+       res.status(400).send("No content set!");
+   }
+    
 });
 
 module.exports = router;
