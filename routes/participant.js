@@ -1,7 +1,8 @@
 var express = require('express');
 var router = express.Router();
+var auth = require('../modules/auth');
 
-router.get('/', function (req, res, next) {
+router.get('/', auth.requireLoggedIn, auth.requireRole('teamleider'), function (req, res, next) {
 
     var db = req.app.locals.db;
 
@@ -12,7 +13,7 @@ router.get('/', function (req, res, next) {
 });
 
 /* GET home page. */
-router.get('/:id', function (req, res, next) {
+router.get('/:id', auth.requireLoggedIn, auth.requireRole('teamleider'), function (req, res, next) {
 
     var db = req.app.locals.db;
 
@@ -22,7 +23,7 @@ router.get('/:id', function (req, res, next) {
 
 });
 
-router.get('/:id/parents', function (req, res, next) {
+router.get('/:id/parents', auth.requireLoggedIn, auth.requireRole('teamleider'), function (req, res, next) {
 
     var db = req.app.locals.db;
 
@@ -40,7 +41,7 @@ router.get('/:id/parents', function (req, res, next) {
 
 });
 
-router.get('/:id/team', function (req, res, next) {
+router.get('/:id/team', auth.requireLoggedIn, auth.requireRole('teamleider'), function (req, res, next) {
 
     var db = req.app.locals.db;
 
@@ -60,7 +61,7 @@ router.get('/:id/team', function (req, res, next) {
 
 });
 
-router.get('/:id/score', function(req, res, next) {
+router.get('/:id/score', auth.requireLoggedIn, auth.requireRole('teamleider'), function(req, res, next) {
     
     var id = req.params.id;
     var type = req.query.type;
@@ -82,7 +83,7 @@ router.get('/:id/score', function(req, res, next) {
     
 });
 
-router.put('/:id/score', function(req, res, next) {
+router.put('/:id/score', auth.requireLoggedIn, auth.requireRole('teamleider'), function(req, res, next) {
    
    var activity = req.body.activity_guid;
    var score = req.body.score;

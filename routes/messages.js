@@ -1,10 +1,11 @@
 var express = require('express');
 var router = express.Router();
 var uuid = require('node-uuid');
+var auth = require('../modules/auth');
 
 module.exports = function(io) {
     //TODO make route '/'
-    router.get('/:id', function(req, res, next){
+    router.get('/:id', auth.requireLoggedIn, auth.requireRole('ouder'), function(req, res, next){
         var db = req.app.locals.db;
 
         var query = db('message as m').select('m.*', 'u1.first_name as recFName', 'u1.last_name as recLName', 'r1.name as recRole', 'u2.first_name as sendFName', 'u2.last_name as sendLName', 'r2.name as sendRole')
@@ -55,7 +56,7 @@ module.exports = function(io) {
 		})
     });
 
-    router.get('/:role/contacts', function(req, res, next){
+    router.get('/:role/contacts', auth.requireLoggedIn, auth.requireRole('ouder'), function(req, res, next){
         var db = req.app.locals.db;
 
         var query = db('role as r').select('r2.*', 'rcst.broadcast', 'u.first_name', 'u.last_name', 'u.guid as userid')
@@ -76,7 +77,7 @@ module.exports = function(io) {
 		})
     });
 
-    router.post('/', function(req, res, next){
+    router.post('/', auth.requireLoggedIn, auth.requireRole('ouder'), function(req, res, next){
         var db = req.app.locals.db;
 
         // Get current data in the right formate
