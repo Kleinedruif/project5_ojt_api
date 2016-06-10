@@ -1,6 +1,19 @@
 var express = require('express');
+var knexnest = require('knexnest');
 var router = express.Router();
 
+var self = this;
+
+
+// Function to check if an object is empty. Thanks to StackOverflow
+var isEmpty = function(obj) {
+    for(var prop in obj) {
+        if(obj.hasOwnProperty(prop))
+            return false;
+    }
+
+    return true && JSON.stringify(obj) === JSON.stringify({});
+}
 
 // get events, ez
 router.get('/', function (req, res, next) {
@@ -26,27 +39,42 @@ router.get('/', function (req, res, next) {
      var id = req.params.id;
      var query = db('day');  
        
-     if(id){
-         query.where({'event_guid': id}).then(function(result){
-             if(result){
-                 console.log(result);
-                 res.json(result);
-             }
-             else{
-                 res.status(404);
-             }
-         });
-     }
-     else{
-         res.status(404);
-     }
+     query.where({'event_guid': id}).then(function(result){
+        if(isEmpty(result)){
+            console.log(result);
+            res.json(result);
+        }
+        else{
+            res.send(result).status(404);
+        }
+    });
  });
  
  // Geef mij allezzzz bij dit event.
  router.get('/:id/', function(req, res, next){
-     
- })
+    var db = req.app.locals.db;     
+    var id = req.params.id;
+    
+    var query = db('day AS d').select(
+            'd.guid AS _dayId',
+            'a.guid AS _activities__activityId',
+            'a.time AS _activities__time',
+            'a.name AS _activities__name',
+            'a.assessable AS _activities__assessable',
+            'a.status AS _activities__status');
+        query.innerJoin('activity AS a', 'a.day_guid', 'd.guid');
+    query.where({'d.event_guid': id});
 
+    knexnest(query).then(function(result){
+        if(result != null){
+            res.json(result);
+        }
+        else{
+            res.json([]).status(404);
+        }
+    });
+ });
+// I'ma just leave this here for a while
 
 
 module.exports = router;
