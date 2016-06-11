@@ -6,15 +6,16 @@ var router = express.Router();
 // Function to check if an object is empty. Thanks to StackOverflow
 var isEmpty = function(obj) {
     for(var prop in obj) {
-        if(obj.hasOwnProperty(prop))
+        if(obj.hasOwnProperty(prop)){
             return false;
+        }
     }
 
     return true && JSON.stringify(obj) === JSON.stringify({});
 }
 
 // get events, ez
-router.get('/', auth.requireLoggedIn, auth.requireRole('ouder'), function (req, res, next) {
+router.get('/', auth.requireLoggedIn, auth.requireRole('ouder'), function(req, res, next) {
     var db = req.app.locals.db;
     var query = db('event');
     
@@ -52,7 +53,7 @@ router.get('/', auth.requireLoggedIn, auth.requireRole('ouder'), function (req, 
     var db = req.app.locals.db;     
     var id = req.params.id;
     var active = req.query.active;
-    var assessable = req.query.assessable
+    var assessable = req.query.assessable;
     
     /* Knexnest:
 
