@@ -50,11 +50,12 @@ router.get('/', function (req, res, next) {
     });
  });
  
- // Geef mij allezzzz bij dit event.
+ // Possilbe query strings: active(0/1 for inactive/active), assessable(0/1 for false/true)
  router.get('/:id/', function(req, res, next){
     var db = req.app.locals.db;     
     var id = req.params.id;
     var active = req.query.active;
+    var assessable = req.query.assessable
     
     /* Knexnest:
 
@@ -79,8 +80,18 @@ router.get('/', function (req, res, next) {
     query.where({'d.event_guid': id});
     
     //check for query parameter
-    if(active == 'active'){
-        query.where({'a.status': active});
+    if(active == 1){
+        query.where({'a.status': 'active'});
+    }
+    if(active == 0){
+        query.where({'a.status': 'inactive'});
+    }
+
+    if(assessable == 1){
+        query.where({'a.assessable': assessable});
+    }
+    if(assessable == 0){
+        query.where({'a.assessable': assessable});
     }
 
     // Use knexnest(query), usage is the same as normal
