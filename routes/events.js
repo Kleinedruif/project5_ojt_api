@@ -55,8 +55,17 @@ router.get('/', function (req, res, next) {
     var db = req.app.locals.db;     
     var id = req.params.id;
     
+    /* Knexnest:
+
+        Start a property with _
+        Because of this select statement, Activities will be a property of Day.
+        For some reason (found this out after an hour), if you write _activities only, Knexnest only binds one day as a property. 
+        Therefore, arrays should be written BETWEEN underscores, with its property starting with _ 
+
+    */
     var query = db('day AS d').select(
             'd.guid AS _dayId',
+            'd.date AS _date',
             'a.guid AS _activities__activityId',
             'a.time AS _activities__time',
             'a.name AS _activities__name',
@@ -65,6 +74,7 @@ router.get('/', function (req, res, next) {
         query.innerJoin('activity AS a', 'a.day_guid', 'd.guid');
     query.where({'d.event_guid': id});
 
+    // Use knexnest(query), usage is the same as normal
     knexnest(query).then(function(result){
         if(result != null){
             res.json(result);
@@ -74,7 +84,6 @@ router.get('/', function (req, res, next) {
         }
     });
  });
-// I'ma just leave this here for a while
 
 
 module.exports = router;
