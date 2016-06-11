@@ -1,9 +1,7 @@
 var express = require('express');
 var knexnest = require('knexnest');
+var auth = require('../modules/auth');
 var router = express.Router();
-
-var self = this;
-
 
 // Function to check if an object is empty. Thanks to StackOverflow
 var isEmpty = function(obj) {
@@ -40,7 +38,7 @@ router.get('/', auth.requireLoggedIn, auth.requireRole('ouder'), function (req, 
      var query = db('day');  
        
      query.where({'event_guid': id}).then(function(result){
-        if(isEmpty(result)){
+        if(!isEmpty(result)){
             console.log(result);
             res.json(result);
         }
@@ -100,7 +98,7 @@ router.get('/', auth.requireLoggedIn, auth.requireRole('ouder'), function (req, 
             res.json(result);
         }
         else{
-            res.json([]).status(404);
+            res.json({message: "Er zijn geen activiteiten gevonden voor dit evenement"}).status(404);
         }
     });
  });
