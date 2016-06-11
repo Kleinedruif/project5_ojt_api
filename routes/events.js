@@ -16,7 +16,7 @@ var isEmpty = function(obj) {
 }
 
 // get events, ez
-router.get('/', function (req, res, next) {
+router.get('/', auth.requireLoggedIn, auth.requireRole('ouder'), function (req, res, next) {
     var db = req.app.locals.db;
     var query = db('event');
     
@@ -34,7 +34,7 @@ router.get('/', function (req, res, next) {
     });    
  });
  
- router.get('/:id/days', function(req, res, next){
+ router.get('/:id/days', auth.requireLoggedIn, auth.requireRole('ouder'), function(req, res, next){
      var db = req.app.locals.db;     
      var id = req.params.id;
      var query = db('day');  
@@ -51,7 +51,7 @@ router.get('/', function (req, res, next) {
  });
  
  // Possilbe query strings: active(0/1 for inactive/active), assessable(0/1 for false/true)
- router.get('/:id/', function(req, res, next){
+ router.get('/:id/', auth.requireLoggedIn, auth.requireRole('ouder'), function(req, res, next){
     var db = req.app.locals.db;     
     var id = req.params.id;
     var active = req.query.active;
