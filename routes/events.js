@@ -54,6 +54,7 @@ router.get('/', function (req, res, next) {
  router.get('/:id/', function(req, res, next){
     var db = req.app.locals.db;     
     var id = req.params.id;
+    var active = req.query.active;
     
     /* Knexnest:
 
@@ -63,16 +64,24 @@ router.get('/', function (req, res, next) {
         Therefore, arrays should be written BETWEEN underscores, with its property starting with _ 
 
     */
-    var query = db('day AS d').select(
+    var query = db('day AS d');
+    query.select(
             'd.guid AS _dayId',
             'd.date AS _date',
             'a.guid AS _activities__activityId',
             'a.time AS _activities__time',
             'a.name AS _activities__name',
             'a.assessable AS _activities__assessable',
-            'a.status AS _activities__status');
-        query.innerJoin('activity AS a', 'a.day_guid', 'd.guid');
+            'a.status AS _activities__status'                
+    );  
+    query.innerJoin('activity AS a', 'a.day_guid', 'd.guid');
+
     query.where({'d.event_guid': id});
+    
+    //check for query parameter
+    if(active == 'active'){
+        query.where({'a.status': active});
+    }
 
     // Use knexnest(query), usage is the same as normal
     knexnest(query).then(function(result){
