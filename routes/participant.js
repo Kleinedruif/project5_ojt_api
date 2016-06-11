@@ -1,7 +1,8 @@
 var express = require('express');
 var router = express.Router();
+var auth = require('../modules/auth');
 
-router.get('/', function (req, res, next) {
+router.get('/', auth.requireLoggedIn, auth.requireRole('teamleider'), function (req, res, next) {
 
     var db = req.app.locals.db;
 
@@ -12,7 +13,7 @@ router.get('/', function (req, res, next) {
 });
 
 /* GET home page. */
-router.get('/:id', function (req, res, next) {
+router.get('/:id', auth.requireLoggedIn, auth.requireRole('teamleider'), function (req, res, next) {
 
     var db = req.app.locals.db;
 
@@ -22,7 +23,7 @@ router.get('/:id', function (req, res, next) {
 
 });
 
-router.get('/:id/parents', function (req, res, next) {
+router.get('/:id/parents', auth.requireLoggedIn, auth.requireRole('teamleider'), function (req, res, next) {
 
     var db = req.app.locals.db;
 
@@ -40,7 +41,7 @@ router.get('/:id/parents', function (req, res, next) {
 
 });
 
-router.get('/:id/team', function (req, res, next) {
+router.get('/:id/team', auth.requireLoggedIn, auth.requireRole('teamleider'), function (req, res, next) {
 
     var db = req.app.locals.db;
 
@@ -60,7 +61,7 @@ router.get('/:id/team', function (req, res, next) {
 
 });
 
-router.get('/:id/score', function(req, res, next) {
+router.get('/:id/score', auth.requireLoggedIn, auth.requireRole('teamleider'), function(req, res, next) {
     
     var id = req.params.id;
     var type = req.query.type;
@@ -82,7 +83,7 @@ router.get('/:id/score', function(req, res, next) {
     
 });
 
-router.put('/:id/score', function(req, res, next) {
+router.put('/:id/score', auth.requireLoggedIn, auth.requireRole('teamleider'), function(req, res, next) {
    
    var activity = req.body.activity_guid;
    var score = req.body.score;
@@ -99,11 +100,11 @@ router.put('/:id/score', function(req, res, next) {
                        score: score
                    });
         
-        query.then(function(success) {
-            if(success == 0) {
+        query.then(function(message) {
+            if(message == 0) {
                 res.json({error: "Activity or participant does not exist!"});
             } else {
-                res.json({success: "OK"});
+                res.json({message: "OK"});
             }
         });
        
@@ -111,6 +112,54 @@ router.put('/:id/score', function(req, res, next) {
        res.json({error: "Missing data!"});
    }
 
+});
+
+router.get('/:id/note', function(req, res, next) {
+    
+    var id = req.params.id;
+    var type = req.query.type;
+    var db = req.app.locals.db;
+    var query = db('note').where('participant_guid', id);
+    
+    if(type) {
+        query.where('private', (type == "private" ? 1 : 0));
+    }
+    
+    query.then(function(notes) {
+       res.json(notes); 
+    });
+    
+});
+
+router.post('/:id/note', function(req, res, next) {
+   
+   var id = req.params.id;
+   var content = req.body.content;
+   var type = req.body.type;
+   var db = req.app.locals.db;
+   
+   if(content && type) {
+       
+       var typeNumerical = (type == 'private' ? 1 : 0);
+       var query = db('note')
+                   .insert({
+                      guid: "",
+                      participant_guid: id,
+                      private: typeNumerical,
+                      content: content,
+                      status: 'active' 
+                   });
+       
+       query.then(function(message) {
+           res.json({message: 'OK'});
+       });
+       
+       
+       
+   } else {
+       res.status(400).send("No content set!");
+   }
+    
 });
 
 module.exports = router;

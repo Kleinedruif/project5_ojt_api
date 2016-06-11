@@ -1,41 +1,45 @@
 var bcrypt = require('bcrypt');
 var crypto = require('crypto');
-var config = require('../config/auth.json');
+var config = require('../config/config');
 
 module.exports = {
     // The user must be logged in to access this route.
-    requireLoggedIn: function(req, res, next) {
-        if (!req.body.authToken) {
+    requireLoggedIn: function(req, res, next) {             
+        if (!req.query.authToken) {
             return res.status(401).json({message: 'U moet ingelogd zijn om deze pagina te bezoeken.'});
+        } else if (!req.query.api_key){
+            return res.status(401).json({message: 'No api key given.'});
+        } else if (req.query.api_key != config.webserver_api_key && req.query.api_key != config.app_api_key){
+            return res.status(401).json({message: 'Invallid api key.'});
         }
         
-        db('user').where('authToken', req.body.authToken).then(function(user) {
-            return next();
-        })
-        .catch(function(error) {
-            return res.status(500).json({ message: error });
+        var db = req.app.locals.db;
+        db('user').innerJoin('user_has_role as uhr', 'uhr.user_guid', 'user.guid').innerJoin('role as r', 'uhr.role_guid', 'r.guid').where('authToken', req.query.authToken).then(function(user) {
+            if (user.length != 1) {
+                return res.status(500).json({ message: 'Deze token is niet valid' });
+            } else {
+                var timeDiff = getCurrentDate() - user[0].token_experation;
+                // Session off 1 day and if token has expired
+                if (timeDiff > 86400000) return res.status(417).json({message: 'Token is niet meer valid, log opnieuw in'});
+                            
+                // Set the role on the request
+                req.role = user[0].name;
+                return next(); 
+            }           
         });
-        
-        return res.status(401).json({message: 'U moet ingelogd zijn om deze pagina te bezoeken.'});
     },
     
     requireRole: function(role) {
         return function(req, res, next) {
-            userRole = req.session.user.role_name;
-            if (!req.session.authenticated) {
-                return res.status(401).json({message: 'U moet ingelogd zijn om deze pagina te bezoeken.'});
-            }
-            
+            userRole = req.role;
+
             if (userRole == role) {
                 return next();
-            }
-            if (role == 'organisatie' || role == 'directie') {
+            } else if ((role == 'organisatie' || role == 'directie') && (userRole !='organisatie' && userRole != 'directie')) {
                 return res.status(403).json({message: 'U heeft geen rechten om deze pagina te bezoeken.'});
-            }
-            if ((role == 'teamleider' || role == 'ouder') && (userRole == 'organisatie' || userRole == 'directie')) {
+            } else if ((role == 'teamleider' || role == 'ouder') && (userRole == 'organisatie' || userRole == 'directie')) {
                 return next();
-            }
-            if ((role == 'ouder') && (userRole == 'organisatie' || userRole == 'directie') || userRole == 'teamleider') {
+            } else if ((role == 'ouder' && (userRole == 'organisatie' || userRole == 'directie' || userRole == 'teamleider'))) {
                 return next();
             }
             
@@ -46,24 +50,35 @@ module.exports = {
     // Try to login the user.
     login: function(req, res, email, password) {
         var db = req.app.locals.db;
-        
+
         email = email.trim();
         password = password.trim();
         
-        db('user as u').innerJoin('user_has_role as uhr', 'u.guid', 'uhr.user_guid')
+        db('user as u').select('u.*', 'r.guid as role_guid', 'r.name as role_name')
+					   .innerJoin('user_has_role as uhr', 'u.guid', 'uhr.user_guid')
                        .innerJoin('role as r', 'uhr.role_guid', 'r.guid')
-                       .where('u.email',email)
+                       .where('u.email', email)
                        .then(function(user){
             user = user[0];
             
-            if (!user) {
-                return res.status(401).json({ message: "U heeft een verkeerde email of wachtwoord ingevuld." });
+            if (!user) {              
+                var fail = onLoginFail(req.connection.remoteAddress);
+                // Check if user is allowed to login       
+                if (fail && Date.now() < fail.nextTry) {
+                    return res.status(429).json({message: 'Te vaak geprobeerd opnieuw in te loggen, probeer het over 10 minuten nogmaals'});
+                } else {
+                    return res.status(401).json({message: 'U heeft een verkeerde email of wachtwoord ingevuld.' });
+                }               
             } else {
+                onLoginSuccess(req.connection.remoteAddress);
                 bcrypt.compare(password, user.hash, function(err, result) {
                     if (result) {
                         var authToken = crypto.randomBytes(64).toString('hex');
                         
-                        db('user').where('email', email).update('authToken', authToken).then(function(inserts) {
+                        // Get current data in the right formate
+                        var date = getCurrentDate();
+                        
+                        db('user').where('email', email).update('authToken', authToken).update('token_experation', date).then(function(inserts) {
                             return res.status(200).json({
                                 message: "OK",
                                 auth_token: authToken,
@@ -76,7 +91,7 @@ module.exports = {
                                 first_name: user.first_name,
                                 last_name: user.last_name,
                                 role_guid: user.role_guid,
-                                role_name: user.name             // Role name
+                                role_name: user.role_name             // Role name
                             });
                         })
                         .catch(function(error) {
@@ -102,3 +117,42 @@ module.exports = {
         });
     }
 };
+
+function getCurrentDate(){
+    var d = new Date,
+        dformat = [d.getMonth() + 1,
+            d.getDate(),
+            d.getFullYear()].join('/') + ' ' +
+            [d.getHours(),
+                d.getMinutes(),
+                d.getSeconds()].join(':');
+    return d;
+}
+
+// Stores all the failed logins for a max of 30 min
+var failures = {};
+
+function onLoginFail(ip) {
+    var fail = failures[ip];
+    if (fail == undefined) var fail = failures[ip] = {count: 0, nextTry: new Date()};
+    
+    ++fail.count;
+    // If 5 attempts, wait 10 min to try again
+    if (fail.count == 5){
+         fail.nextTry.setTime(Date.now() + MINS10); // Wait another two seconds for every failed attempt
+    }
+   
+    return fail;
+}
+
+function onLoginSuccess(ip) { delete failures[ip]; }
+
+// Clear log every 30 min
+var MINS10 = 600000, MINS30 = 1 * MINS10;
+setInterval(function() {
+    for (var ip in failures) {
+        if (Date.now() - failures[ip].nextTry > MINS10) {
+            delete failures[ip];
+        }
+    }
+}, MINS30);

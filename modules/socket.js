@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 var ursa = require('ursa');
 var fs = require('fs');
-var webserverConfig = require('../config/webserver');
+var webserverConfig = require('../config/config');
 
 module.exports = function (io) {
 
@@ -11,8 +11,6 @@ module.exports = function (io) {
     io.set('authorization', function (handshake, callback) {
         // Retrive private key
         var key = ursa.createPrivateKey(fs.readFileSync('./private_key.pem'));
-
-        var webserver_ip = process.env.webserver_ip || webserverConfig.webserver_ip;
 
         console.log('Webserver trying to connected on ' + handshake.connection._peername.address);
         
