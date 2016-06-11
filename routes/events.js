@@ -25,7 +25,7 @@ router.get('/', auth.requireLoggedIn, auth.requireRole('ouder'), function(req, r
     if(year){
         query.where({'year': year});          
     }
-    if(active){       
+    if(active == "active"){       
        query.where({'status': active});
     }   
     query.then(function(result){
@@ -43,7 +43,7 @@ router.get('/', auth.requireLoggedIn, auth.requireRole('ouder'), function(req, r
             res.json(result);
         }
         else{
-            res.send(result).status(404);
+            res.send({message: 'Er zijn geen dagen gevonden voor dit evenement'}).status(404);
         }
     });
  });
@@ -77,7 +77,7 @@ router.get('/', auth.requireLoggedIn, auth.requireRole('ouder'), function(req, r
 
     query.where({'d.event_guid': id});
     
-    //check for query parameter
+    //check for query parameters
     if(active == 1){
         query.where({'a.status': 'active'});
     }
@@ -94,6 +94,8 @@ router.get('/', auth.requireLoggedIn, auth.requireRole('ouder'), function(req, r
 
     // Use knexnest(query), usage is the same as normal
     knexnest(query).then(function(result){
+
+        // Check for null, because knexnest returns null on an empty object/array
         if(result != null){
             res.json(result);
         }
