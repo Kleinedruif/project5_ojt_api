@@ -2,6 +2,43 @@
 
 We coderen in het Engels. Commitnamen en beschrijvingen moeten ook zinvol zijn, houd de code netjes en overzichtelijk.
 
+## Installatie en uitvoeren API
+
+### Installeren van NodeJS v4.4.5 LTS
+https://nodejs.org/en/
+Waar het wordt geïnstalleerd maakt niet uit. Locatie kan dus aangepast worden. De rest alles default laten en installeren.
+<br />![alt tag](http://i.imgur.com/zjLvv3t.png)<br />
+
+### Installeren van Python
+https://www.python.org/downloads/
+<br />![alt tag](http://i.imgur.com/wQhg3Ez.png)<br />
+Maakt niet uit waar het wordt geïnstalleerd, zolang het Path wordt gezet op volgende scherm
+
+Op het volgende scherm kan Python toegevoegd worden aan Path, doe dit.
+<br />![alt tag](http://i.imgur.com/LZ7dxY3.png)<br />
+Klik daarna op Next en ga door met installeren.
+
+### Installeren OpenSSL
+https://slproweb.com/products/Win32OpenSSL.html
+Kies de laatste, niet light versie, en dan 32 of 64 bits.
+<br />![alt tag](http://i.imgur.com/SS99eSv.png)<br />
+Bij de installatie alles default laten en installeren op de C schijf. Als het niet op  de C schijf staat werkt het standaard niet en moet er iets aan de config ergens veranderd worden. De package die gebruikt maakt van OpenSSL kan het dan niet vinden.
+
+### Binnenhalen project
+Haal het project binnen waar je het wilt hebben.
+<br />![alt tag](http://i.imgur.com/PncoM4S.png)<br />
+Open een command prompt in deze map (kan door op het file path de klikken en “cmd” in te typen).
+Run het command “npm install” (Dit haalt alle packeges binnen die nodig zijn voor het draaien van de server).
+Als het goed is nu alles geïnstalleerd en zou het gestart kunnen worden doormiddel van “npm start”.
+<br />![alt tag](http://i.imgur.com/enHZhuu.png)<br />
+
+### Extra
+Om ontwikkelen makkelijker te maken kan “npm install nodemon –g” geïnstalleerd worden en dan start de server met “nodemon start”. Met nodemon word bij elke file save de server opnieuw opstart, zodat dit niet handmatig hoeft.
+<br />![alt tag](http://i.imgur.com/rhYN05M.png)<br />
+(Zoiets zou je moeten krijgen na het opstarten van de server via nodemon)
+We maken gebruikt van de editor Visual Studio Code, maar elke andere IDE of tekst editor kan gebruikt worden; er hoeft immers niet gecompileerd te worden.
+ 
+
 # Opzet Github:
 
 Master branch = stabiele demo. 2-3 dagen voordat we het gesprek hebben met de klant / presentatie.
