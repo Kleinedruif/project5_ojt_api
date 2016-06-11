@@ -39,7 +39,6 @@ router.get('/', auth.requireLoggedIn, auth.requireRole('ouder'), function (req, 
        
      query.where({'event_guid': id}).then(function(result){
         if(!isEmpty(result)){
-            console.log(result);
             res.json(result);
         }
         else{
