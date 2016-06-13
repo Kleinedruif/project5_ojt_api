@@ -48,7 +48,7 @@ module.exports = {
     },
     
     // Try to login the user.
-    login: function(req, res, email, password) {
+    login: function(req, res, email, password, deviceToken) {
         var db = req.app.locals.db;
 
         email = email.trim();

@@ -9,6 +9,7 @@ let path = require('path');
 let validator = require('validator');
 let crypto = require('crypto');
 let auth = require('../modules/auth');
+// var cors = require('cors');
 
 let multer = require('multer'); // multipart/form-data middleware
 let storage = multer.diskStorage({
@@ -75,14 +76,20 @@ function getCurrentDate(){
 // });
 
 router.post('/login', function (req, res, next) {
+    console.log("elloa");
+    
     let email = req.body.email.toLowerCase();
     let password = req.body.password;
+    let deviceToken = req.body.deviceToken;
 
     if (!email || !password) {
         return res.status(400).json({ message: "Vul alstublieft een email en een wachtwoord in." });
     }
-
-    auth.login(req, res, email, password);
+    
+    console.log("deviceToken: "+deviceToken);
+    
+    // auth.login(req, res, email, password);
+    auth.login(req, res, email, password, deviceToken);
 });
 
 router.get('/:id', auth.requireLoggedIn, auth.requireRole('organisatie'), function (req, res, next) {

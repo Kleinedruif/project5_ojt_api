@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var uuid = require('node-uuid');
 var auth = require('../modules/auth');
+// var cors = require('cors');
 
 module.exports = function(io) {
     //TODO make route '/'

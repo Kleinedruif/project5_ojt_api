@@ -5,6 +5,7 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var socket_io = require('socket.io');
+var cors = require('cors')
 
 var app = express();
 
@@ -40,6 +41,9 @@ var socket = require('./modules/socket')(app.io);
 
 // Set a database (and query builder) to use globally
 app.locals.db = require('./modules/database');
+
+//Enabling CORS on every route
+app.use(cors()); 
 
 // Routes
 app.use('/messages', messages); // Put this before the default /user

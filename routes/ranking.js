@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var auth = require('../modules/auth');
+// var cors = require('cors');
 
 /* GET home page. */
 router.get('/', auth.requireLoggedIn, auth.requireRole('ouder'), function(req, res, next) {
