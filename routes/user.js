@@ -81,7 +81,7 @@ router.post('/login', function (req, res, next) {
     let email = req.body.email.toLowerCase();
     let password = req.body.password;
     let deviceToken = req.body.deviceToken;
-
+    
     if (!email || !password) {
         return res.status(400).json({ message: "Vul alstublieft een email en een wachtwoord in." });
     }
