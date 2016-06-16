@@ -5,3 +5,4 @@ jsconfig.json
 /.vscode
 .editorconfig
 npm-debug.log
+*.bat
