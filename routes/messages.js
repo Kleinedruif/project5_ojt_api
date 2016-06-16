@@ -26,6 +26,7 @@ module.exports = function(io) {
             res.json(messages);
         })
 		.catch(function(err){
+            console.log('There has been in error retrieving messages', error);
 			res.status(400).json(error);
 		})
     });
@@ -47,11 +48,11 @@ module.exports = function(io) {
 
         query
 		.then(function (messages) {
-            res.json(messages);
+            return res.json(messages);
         })
 		.catch(function(err){
-			console.error(error);
-			res.status(400).json(error);
+			console.log('There has been in error in the message route', error);
+			return res.status(400).json(error);
 		})
     });
 
@@ -68,11 +69,11 @@ module.exports = function(io) {
 
         query
 		.then(function (contacts) {
-            res.json(contacts);
+            return res.json(contacts);
         })
 		.catch(function(err){
-			console.error(error);
-			res.status(400).json(error);
+			console.log('There has been in error in retrieving contacts', error);
+			return res.status(400).json(error);
 		})
     });
 
@@ -128,10 +129,11 @@ function sendMessage(req, res, allowed, io){
             // Emit to all sockets the newly recieved message, to webserver knows were to send it to based on the receiver_guid
             io.sockets.send({ receiver_guid: req.body.receiverId, sender_guid: req.body.senderId, body: req.body.body });
         }
-        res.status(200).json(inserts);//user.toObject({ virtuals: true }));
+        return res.status(200).json(inserts);//user.toObject({ virtuals: true }));
     })
     .catch(function (error) {
-        res.status(400).json(error);
+        console.log('There has been in error in saving message', error);
+        return res.status(400).json(error);
     });
 }
 
