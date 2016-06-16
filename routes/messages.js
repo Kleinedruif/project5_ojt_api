@@ -21,11 +21,9 @@ module.exports = function(io) {
             .orWhere('m.sender_guid', req.params.id)
             .orderBy('m.date', 'ASC');
 
-        query
-		.then(function(messages) {
+        query.then(function(messages) {
             res.json(messages);
-        })
-		.catch(function(err){
+        }).catch(function(err){
             console.log('There has been in error retrieving messages', error);
 			res.status(400).json(error);
 		})
@@ -46,11 +44,9 @@ module.exports = function(io) {
             .orderBy('m.date', 'ASC')
 			.offset(offset);
 
-        query
-		.then(function (messages) {
+        query.then(function (messages) {
             return res.json(messages);
-        })
-		.catch(function(err){
+        }).catch(function(err){
 			console.log('There has been in error in the message route', error);
 			return res.status(400).json(error);
 		})
@@ -67,11 +63,9 @@ module.exports = function(io) {
             .where('r.name', req.params.role)
             .orderBy('u.first_name', 'ASC')
 
-        query
-		.then(function (contacts) {
+        query.then(function (contacts) {
             return res.json(contacts);
-        })
-		.catch(function(err){
+        }).catch(function(err){
 			console.log('There has been in error in retrieving contacts', error);
 			return res.status(400).json(error);
 		})
@@ -122,16 +116,14 @@ function sendMessage(req, res, allowed, io){
         receiver_guid: req.body.receiverId,
         body: req.body.body,
         date: d
-    })
-    .then(function (inserts) {                      
+    }).then(function (inserts) {                      
         // Only send messages with role 'ouder' to webserver
         if (allowed[0].name == 'ouder' || req.role == 'ouder'){
             // Emit to all sockets the newly recieved message, to webserver knows were to send it to based on the receiver_guid
             io.sockets.send({ receiver_guid: req.body.receiverId, sender_guid: req.body.senderId, body: req.body.body });
         }
         return res.status(200).json(inserts);//user.toObject({ virtuals: true }));
-    })
-    .catch(function (error) {
+    }).catch(function (error) {
         console.log('There has been in error in saving message', error);
         return res.status(400).json(error);
     });
