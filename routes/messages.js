@@ -84,10 +84,12 @@ module.exports = function(io) {
             .innerJoin('user_has_role as uhr1', 'u1.guid', 'uhr1.user_guid')
             .innerJoin('role_can_send_to as rcst', 'uhr1.role_guid', 'rcst.role_guid_from')
             .innerJoin('user_has_role as uhr2', 'rcst.role_guid_to', 'uhr2.user_guid')
+            .innerJoin('role as r', 'rcst.role_guid_to', 'r.guid')
             .where('u1.guid', req.body.senderId)
             .where('uhr2.user_guid', req.body.receiverId)
             .then(function(allowedToSendTo){
                 if (allowedToSendTo && allowedToSendTo.length){
+                    console.log(allowedToSendTo);
                      // Get current data in the right formate
                     var d = new Date,
                         dformat = [
@@ -108,9 +110,12 @@ module.exports = function(io) {
                         body: req.body.body,
                         date: d
                     })
-                    .then(function (inserts) {
-                        // Emit to all sockets the newly recieved message, to webserver knows were to send it to based on the receiver_guid
-                        io.sockets.send({ receiver_guid: req.body.receiverId, sender_guid: req.body.senderId, body: req.body.body });
+                    .then(function (inserts) {                      
+                        // Only send messages with role 'ouder' to webserver
+                        if (allowedToSendTo[0].name == 'ouder' || req.role == 'ourder'){
+                            // Emit to all sockets the newly recieved message, to webserver knows were to send it to based on the receiver_guid
+                            io.sockets.send({ receiver_guid: req.body.receiverId, sender_guid: req.body.senderId, body: req.body.body });
+                        }
                         res.status(200).json(inserts);//user.toObject({ virtuals: true }));
                     })
                     .catch(function (error) {
