@@ -87,40 +87,9 @@ module.exports = function(io) {
             .innerJoin('role as r', 'rcst.role_guid_to', 'r.guid')
             .where('u1.guid', req.body.senderId)
             .where('uhr2.user_guid', req.body.receiverId)
-            .then(function(allowedToSendTo){
-                if (allowedToSendTo && allowedToSendTo.length){
-                    console.log(allowedToSendTo);
-                     // Get current data in the right formate
-                    var d = new Date,
-                        dformat = [
-                            d.getMonth() + 1,
-                            d.getDate(),
-                            d.getFullYear()
-                        ].join('/') + ' ' + [
-                            d.getHours(),
-                            d.getMinutes(),
-                            d.getSeconds()
-                        ].join(':');
-
-                    // Insert message   
-                    db('message').insert({
-                        guid: Math.round(new Date().getTime() / 1000),
-                        sender_guid: req.body.senderId,
-                        receiver_guid: req.body.receiverId,
-                        body: req.body.body,
-                        date: d
-                    })
-                    .then(function (inserts) {                      
-                        // Only send messages with role 'ouder' to webserver
-                        if (allowedToSendTo[0].name == 'ouder' || req.role == 'ourder'){
-                            // Emit to all sockets the newly recieved message, to webserver knows were to send it to based on the receiver_guid
-                            io.sockets.send({ receiver_guid: req.body.receiverId, sender_guid: req.body.senderId, body: req.body.body });
-                        }
-                        res.status(200).json(inserts);//user.toObject({ virtuals: true }));
-                    })
-                    .catch(function (error) {
-                        res.status(400).json(error);
-                    });
+            .then(function(allowed){
+                if (allowed && allowed.length){
+                    sendMessage(req, res, allowed, io);
                 } else {
                     return res.status(404).json({message: 'Kan dit bericht naar deze persoon versturen'});
                 }
@@ -128,5 +97,41 @@ module.exports = function(io) {
     });
 
     return router;
+}
+
+function sendMessage(req, res, allowed, io){
+    var db = req.app.locals.db;
+    
+    // Get current data in the right formate
+    var d = new Date,
+        dformat = [
+            d.getMonth() + 1,
+            d.getDate(),
+            d.getFullYear()
+        ].join('/') + ' ' + [
+            d.getHours(),
+            d.getMinutes(),
+            d.getSeconds()
+        ].join(':');
+
+    // Insert message   
+    db('message').insert({
+        guid: Math.round(new Date().getTime() / 1000),
+        sender_guid: req.body.senderId,
+        receiver_guid: req.body.receiverId,
+        body: req.body.body,
+        date: d
+    })
+    .then(function (inserts) {                      
+        // Only send messages with role 'ouder' to webserver
+        if (allowed[0].name == 'ouder' || req.role == 'ouder'){
+            // Emit to all sockets the newly recieved message, to webserver knows were to send it to based on the receiver_guid
+            io.sockets.send({ receiver_guid: req.body.receiverId, sender_guid: req.body.senderId, body: req.body.body });
+        }
+        res.status(200).json(inserts);//user.toObject({ virtuals: true }));
+    })
+    .catch(function (error) {
+        res.status(400).json(error);
+    });
 }
 
