@@ -24,6 +24,7 @@ module.exports = {
                             
                 // Set the role on the request
                 req.role = user[0].name;
+                req.userid = user[0].guid;
                 return next(); 
             }           
         });
