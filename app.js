@@ -17,6 +17,7 @@ var routes = require('./routes/index');
 var ranking = require('./routes/ranking');
 var user = require('./routes/user');
 var team = require('./routes/team');
+var events = require('./routes/events');
 var messages = require('./routes/messages')(app.io);
 var participant = require('./routes/participant');
 
@@ -34,6 +35,7 @@ app.use(bodyParser.urlencoded({
     extended: true,
     limit: 100000000
 }));
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Setup socket
@@ -51,6 +53,7 @@ app.use('/user', user);
 app.use('/participant', participant);
 app.use('/ranking', ranking);
 app.use('/team', team);
+app.use('/events', events);
 app.use('/', routes);
 
 // catch 404 and forward to error handler
