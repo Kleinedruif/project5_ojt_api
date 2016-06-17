@@ -24,7 +24,6 @@ module.exports = function(io) {
         query.then(function(messages) {
             res.json(messages);
         }).catch(function(err){
-            console.log('There has been in error retrieving messages', error);
 			res.status(400).json(error);
 		})
     });
