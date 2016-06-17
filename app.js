@@ -16,7 +16,7 @@ var routes = require('./routes/index');
 var ranking = require('./routes/ranking');
 var user = require('./routes/user');
 var team = require('./routes/team');
-var events = require('./routes/events');
+var event = require('./routes/event');
 var messages = require('./routes/messages')(app.io);
 var participant = require('./routes/participant');
 
@@ -49,7 +49,7 @@ app.use('/user', user);
 app.use('/participant', participant);
 app.use('/ranking', ranking);
 app.use('/team', team);
-app.use('/events', events);
+app.use('/event', event);
 app.use('/', routes);
 
 // catch 404 and forward to error handler

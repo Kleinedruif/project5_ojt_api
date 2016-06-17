@@ -4,25 +4,35 @@ var auth = require('../modules/auth');
 var router = express.Router();
 
 // Get all events
+// Possible query strings: active(0/1 for inactive/active)
 router.get('/', auth.requireLoggedIn, auth.requireRole('ouder'), function(req, res, next) {
     var db = req.app.locals.db;
-    var status = req.query.active ? ((req.query.active == 'active' || req.query.active == 'inactive') ? req.query.active : 'active') : 'active';
+    var active = req.query.active;
+    var year = req.query.year;
+
+     // the search query defaults to 'active'
+    var status = 'active';
+
+    if(req.query.active == 0){
+        status = 'inactive';
+    }
     
     var query = db('event').orderBy('year', 'DESC').where({'status': status});
  
-    if(req.query.year){
-        query.where({'year': req.query.year});          
+    if(year){
+        query.where({'year': year});          
     }    
 
     query.then(function(result){
         if(result && result.length){
             return res.json(result); 
         } else {
-            return res.status(404).json({message: "Er bestaat geen event in het jaar '" + req.query.year + "' die '" + status + "' is"});
+            return res.status(404).json({message: "Er bestaat geen event in het jaar '" + year + "' die '" + status + "' is"});
         }
     });    
 });
  
+
 router.get('/:id/days', auth.requireLoggedIn, auth.requireRole('ouder'), function(req, res, next){
     var db = req.app.locals.db;     
     var id = req.params.id;
@@ -41,7 +51,12 @@ router.get('/:id/days', auth.requireLoggedIn, auth.requireRole('ouder'), functio
 router.get('/:id/', auth.requireLoggedIn, auth.requireRole('ouder'), function(req, res, next){
     var db = req.app.locals.db;     
     var id = req.params.id;
-    var status = req.query.active ? (req.query.active == 0 ? 'inactive' : 'active') : 'active';
+    // the search query defaults to 'active'
+    var status = 'active';
+
+    if(req.query.active == 0){
+        status = 'inactive';
+    }
     
     /* Knexnest:
         Start a property with _
