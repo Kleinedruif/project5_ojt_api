@@ -1,4 +1,6 @@
 var express = require('express');
+var http = require("http");
+var https = require("https");
 var router = express.Router();
 var uuid = require('node-uuid');
 var auth = require('../modules/auth');
@@ -111,12 +113,12 @@ module.exports = function(io) {
 					   .innerJoin('user_has_role as uhr', 'u.guid', 'uhr.user_guid')
                        .innerJoin('role as r', 'uhr.role_guid', 'r.guid')
                        .where('u.guid', receiver)
-                       .then(function(result){
+                       .then(function(user){
                           
                            
                 user = user[0];
                 
-                var deviceTokens;
+                var deviceTokens = [];
                 deviceTokens[0] = user.deviceToken;
                 
                 console.log('sending push notification');
@@ -148,15 +150,7 @@ module.exports = function(io) {
         // Your security profile
         var profile = 'toursecurity';
 
-        // Build the request object
-        var req = {
-            method: 'POST',
-            url: 'https://api.ionic.io/push/notifications',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + jwt
-            },
-            data: {
+        var post_data = JSON.stringify({
                 "tokens": deviceTokens,
                 "profile": profile,
                 "notification": {
@@ -171,17 +165,66 @@ module.exports = function(io) {
                         "message": "Hello iOS!"
                     }
                 }
+        });
+
+
+        var post_options = {
+            host: 'https://api.ionic.io',
+            port: '443',
+            method: 'POST',
+            path: '/push/notifications',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + jwt
             }
         };
 
-        // Make the API call
-        $http(req).success(function(resp){
-        // Handle success
-        console.log("Ionic Push: Push success", resp);
-        }).error(function(error){
-        // Handle error 
-        console.log("Ionic Push: Push error", error);
+        // Set up the request
+        var post_req = http.post(post_options, function(res) {
+            res.setEncoding('utf8');
+            res.on('data', function (chunk) {
+                console.log('Response: ' + chunk);
+            });
         });
+
+        // post the data
+        post_req.write(post_data);
+        post_req.end();
+
+        // Build the request object
+        // var req = {
+        //     method: 'POST',
+        //     url: 'https://api.ionic.io/push/notifications',
+        //     headers: {
+        //         'Content-Type': 'application/json',
+        //         'Authorization': 'Bearer ' + jwt
+        //     },
+        //     data: {
+        //         "tokens": deviceTokens,
+        //         "profile": profile,
+        //         "notification": {
+        //             "title": "Nieuw bericht",
+        //             "message": "U heeft een bericht ontvangen",
+        //             "android": {
+        //                 "title": "Hey",
+        //                 "message": "Hello Android!"
+        //             },
+        //             "ios": {
+        //                 "title": "Howdy",
+        //                 "message": "Hello iOS!"
+        //             }
+        //         }
+        //     }
+        // };
+
+        // // Make the API call
+        // http(req).success(function(resp){
+        // // Handle success
+        // console.log("Ionic Push: Push success", resp);
+        // }).error(function(error){
+        // // Handle error 
+        // console.log("Ionic Push: Push error", error);
+        // });
     }
 
     return router;
