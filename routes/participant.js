@@ -29,7 +29,7 @@ router.get('/:id/parents', auth.requireLoggedIn, auth.requireRole('teamleider'),
     }
 
     query.then(function (users) {
-       return  res.json(users);
+        return  res.json(users);
     });
 });
 
@@ -93,15 +93,14 @@ router.put('/:id/score', auth.requireLoggedIn, auth.requireRole('teamleider'), f
             });
         
     } else {
-        return res.status(404).json({error: "Ontbrekende data!"});
+        return res.status(400).json({error: "Ontbrekende data!"});
     }
 });
 
 router.put('/:id/shirt', auth.requireLoggedIn, auth.requireRole('teamleider'), function(req, res, next) {   
     var shirt = req.body.shirt;
     var id = req.params.id;
-    console.log(req.body);
-    
+
     if(shirt) {   
         var db = req.app.locals.db;
         var query = db('participant')
@@ -111,16 +110,15 @@ router.put('/:id/shirt', auth.requireLoggedIn, auth.requireRole('teamleider'), f
                         shirt: shirt
                     });
             
-            query.then(function(message) {
-                if(message == 0) {
-                    return res.status(404).json({error: "Deelnemer of shirt bestaat niet!"});
-                } else {
-                    return res.json({message: "OK"});
-                }
-            });
-        
+        query.then(function(message) {
+            if(message == 0) {
+                return res.status(404).json({error: "Deelnemer of shirt bestaat niet!"});
+            } else {
+                return res.json({message: "OK"});
+            }
+        });      
     } else {
-        return res.status(404).json({error: "Ontbrekende data!"});
+        return res.status(400).json({error: "Ontbrekende data!"});
     }
 });
 
@@ -135,7 +133,7 @@ router.get('/:id/note', function(req, res, next) {
     }
     
     query.then(function(notes) {
-    return res.json(notes); 
+        return res.json(notes); 
     });   
 });
 
@@ -160,7 +158,7 @@ router.post('/:id/note', function(req, res, next) {
             return res.json({message: 'OK'});
         });        
     } else {
-        return res.status(400).send("No content set!");
+        return res.status(400).json({message: 'Ontbrekende data!'});
     }    
 });
 

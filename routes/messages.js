@@ -47,7 +47,6 @@ module.exports = function(io) {
         query.then(function (messages) {
             return res.json(messages);
         }).catch(function(err){
-			console.log('There has been in error in the message route', error);
 			return res.status(400).json(error);
 		})
     });
@@ -66,7 +65,6 @@ module.exports = function(io) {
         query.then(function (contacts) {
             return res.json(contacts);
         }).catch(function(err){
-			console.log('There has been in error in retrieving contacts', error);
 			return res.status(400).json(error);
 		})
     });
@@ -74,7 +72,7 @@ module.exports = function(io) {
     router.post('/', auth.requireLoggedIn, auth.requireRole('ouder'), function(req, res, next){
         var db = req.app.locals.db;
 
-        // This query check if you are allowed to send to the role from the receiver
+        // This query check if you are allowed to send from this role to the receivers role
         var query = db('user as u1')
             .innerJoin('user_has_role as uhr1', 'u1.guid', 'uhr1.user_guid')
             .innerJoin('role_can_send_to as rcst', 'uhr1.role_guid', 'rcst.role_guid_from')
@@ -86,7 +84,7 @@ module.exports = function(io) {
                 if (allowed && allowed.length){
                     sendMessage(req, res, allowed, io);
                 } else {
-                    return res.status(404).json({message: 'Kan dit bericht naar deze persoon versturen'});
+                    return res.status(404).json({message: 'Kan dit bericht niet naar deze persoon versturen'});
                 }
             })
     });
@@ -124,7 +122,6 @@ function sendMessage(req, res, allowed, io){
         }
         return res.status(200).json(inserts);//user.toObject({ virtuals: true }));
     }).catch(function (error) {
-        console.log('There has been in error in saving message', error);
         return res.status(400).json(error);
     });
 }

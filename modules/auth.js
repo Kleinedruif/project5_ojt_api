@@ -8,9 +8,9 @@ module.exports = {
         if (!req.query.authToken) {
             return res.status(401).json({message: 'U moet ingelogd zijn om deze pagina te bezoeken.'});
         } else if (!req.query.api_key){
-            return res.status(401).json({message: 'No api key given.'});
+            return res.status(401).json({message: 'Geen api key meegegeven.'});
         } else if (req.query.api_key != config.webserver_api_key && req.query.api_key != config.app_api_key){
-            return res.status(401).json({message: 'Invallid api key.'});
+            return res.status(401).json({message: 'Foute api key.'});
         }
         
         var db = req.app.locals.db;
