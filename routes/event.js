@@ -3,65 +3,66 @@ var knexnest = require('knexnest');
 var auth = require('../modules/auth');
 var router = express.Router();
 
-// Function to check if an object is empty. Thanks to StackOverflow
-var isEmpty = function(obj) {
-    for(var prop in obj) {
-        if(obj.hasOwnProperty(prop)){
-            return false;
-        }
-    }
-
-    return true && JSON.stringify(obj) === JSON.stringify({});
-}
-
-// get events, ez
+// Get all events
+// Possible query strings: active(0/1 for inactive/active)
 router.get('/', auth.requireLoggedIn, auth.requireRole('ouder'), function(req, res, next) {
     var db = req.app.locals.db;
-    var query = db('event');
-    
-    var year = req.query.year;
     var active = req.query.active;
+    var year = req.query.year;
+
+     // the search query defaults to 'active'
+    var status = 'active';
+
+    if(req.query.active == 0){
+        status = 'inactive';
+    }
     
+    var query = db('event').orderBy('year', 'DESC').where({'status': status});
+ 
     if(year){
         query.where({'year': year});          
-    }
-    if(active == "active"){       
-       query.where({'status': active});
-    }   
+    }    
+
     query.then(function(result){
-        return res.json(result);
+        if(result && result.length){
+            return res.json(result); 
+        } else {
+            return res.status(404).json({message: "Er bestaat geen event in het jaar '" + year + "' die '" + status + "' is"});
+        }
     });    
- });
+});
  
- router.get('/:id/days', auth.requireLoggedIn, auth.requireRole('ouder'), function(req, res, next){
-     var db = req.app.locals.db;     
-     var id = req.params.id;
-     var query = db('day');  
-       
-     query.where({'event_guid': id}).then(function(result){
-        if(!isEmpty(result)){
-            res.json(result);
-        }
-        else{
-            res.json({message: 'Er zijn geen dagen gevonden voor dit evenement'}).status(404);
-        }
-    });
- });
- 
- // Possilbe query strings: active(0/1 for inactive/active), assessable(0/1 for false/true)
- router.get('/:id/', auth.requireLoggedIn, auth.requireRole('ouder'), function(req, res, next){
+
+router.get('/:id/days', auth.requireLoggedIn, auth.requireRole('ouder'), function(req, res, next){
     var db = req.app.locals.db;     
     var id = req.params.id;
-    var active = req.query.active;
-    var assessable = req.query.assessable;
+    var query = db('day');  
+    
+    query.where({'event_guid': id}).then(function(result){
+        if(result && result.length){
+            return res.json(result);
+        } else {
+            return res.status(404).json({message: 'Er zijn geen dagen gevonden voor dit evenement'});
+        }
+    });
+});
+ 
+// Possible query strings: active(0/1 for inactive/active), assessable(0/1 for false/true)
+router.get('/:id/', auth.requireLoggedIn, auth.requireRole('ouder'), function(req, res, next){
+    var db = req.app.locals.db;     
+    var id = req.params.id;
+    // the search query defaults to 'active'
+    var status = 'active';
+
+    if(req.query.active == 0){
+        status = 'inactive';
+    }
     
     /* Knexnest:
-
         Start a property with _
         Because of this select statement, Activities will be a property of Day.
         For some reason (found this out after an hour), if you write _activities only, Knexnest only binds one day as a property. 
         Therefore, arrays should be written BETWEEN underscores, with its property starting with _ 
-
     */
     var query = db('day AS d');
     query.select(
@@ -72,38 +73,25 @@ router.get('/', auth.requireLoggedIn, auth.requireRole('ouder'), function(req, r
             'a.name AS _activities__name',
             'a.assessable AS _activities__assessable',
             'a.status AS _activities__status'                
-    );  
-    query.innerJoin('activity AS a', 'a.day_guid', 'd.guid');
+    ).innerJoin('activity AS a', 'a.day_guid', 'd.guid')
+    .where({'d.event_guid': id})
+    .where({'a.status': status})
+    .orderBy('d.date', 'ASC')
+    .orderBy('a.time', 'ASC');     
 
-    query.where({'d.event_guid': id});
-    
-    //check for query parameters
-    if(active == 1){
-        query.where({'a.status': 'active'});
-    }
-    if(active == 0){
-        query.where({'a.status': 'inactive'});
-    }
-
-    if(assessable == 1){
-        query.where({'a.assessable': assessable});
-    }
-    if(assessable == 0){
-        query.where({'a.assessable': assessable});
-    }
+    if(req.query.assessable){
+        query.where({'a.assessable': req.query.assessable});
+    } 
 
     // Use knexnest(query), usage is the same as normal
     knexnest(query).then(function(result){
-
         // Check for null, because knexnest returns null on an empty object/array
         if(result != null){
-            res.json(result);
-        }
-        else{
-            res.json({message: "Er zijn geen activiteiten gevonden voor dit evenement"}).status(404);
+            return res.json(result);
+        } else {
+            return res.status(404).json({message: "Er zijn geen activiteiten gevonden voor dit evenement"});
         }
     });
- });
-
+});
 
 module.exports = router;

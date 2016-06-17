@@ -201,7 +201,8 @@ router.get('/:id/children', auth.requireLoggedIn, auth.requireRole('ouder'), fun
     let getNotes = function (children) {
         for (let i = 0; i < children.length; i++) {
             let query = db('note as n').select('n.*')
-                .where('n.participant_guid', children[i].guid);
+                .where('n.participant_guid', children[i].guid)
+                .orderBy('n.date', 'DESC');
 
             query.then(function (notes) {
                 //TODO find a way to make query handle this, as to get rid of the loop
@@ -209,7 +210,8 @@ router.get('/:id/children', auth.requireLoggedIn, auth.requireRole('ouder'), fun
                 notes.forEach(function (entry) {
                     children[i].notes.push({
                         guid: entry.guid,
-                        content: entry.content
+                        content: entry.content,
+                        date: entry.date
                     });
                 });
 
