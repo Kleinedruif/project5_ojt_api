@@ -49,7 +49,7 @@ app.use('/user', user);
 app.use('/participant', participant);
 app.use('/ranking', ranking);
 app.use('/team', team);
-app.use('/events', events);
+app.use('/event', events);
 app.use('/', routes);
 
 // catch 404 and forward to error handler

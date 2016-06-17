@@ -43,7 +43,7 @@ router.get('/', auth.requireLoggedIn, auth.requireRole('ouder'), function(req, r
             res.json(result);
         }
         else{
-            res.send({message: 'Er zijn geen dagen gevonden voor dit evenement'}).status(404);
+            res.json({message: 'Er zijn geen dagen gevonden voor dit evenement'}).status(404);
         }
     });
  });
