@@ -53,6 +53,7 @@ module.exports = {
 
         email = email.trim();
         password = password.trim();
+        deviceToken = deviceToken.trim();
         
         db('user as u').select('u.*', 'r.guid as role_guid', 'r.name as role_name')
 					   .innerJoin('user_has_role as uhr', 'u.guid', 'uhr.user_guid')
@@ -78,10 +79,11 @@ module.exports = {
                         // Get current data in the right formate
                         var date = getCurrentDate();
                         
-                        db('user').where('email', email).update('authToken', authToken).update('token_experation', date).then(function(inserts) {
+                        db('user').where('email', email).update('authToken', authToken).update('token_experation', date).update('deviceToken', deviceToken).then(function(inserts) {
                             return res.status(200).json({
                                 message: "OK",
                                 auth_token: authToken,
+                                deviceToken: deviceToken,
                                 
                                 // User data
                                 guid: user.guid,
