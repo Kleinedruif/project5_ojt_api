@@ -102,6 +102,19 @@ module.exports = function(io) {
             date: d
         })
 		.then(function (inserts) {
+            db('user as u').select('u.*', 'r.guid as role_guid', 'r.name as role_name')
+					   .innerJoin('user_has_role as uhr', 'u.guid', 'uhr.user_guid')
+                       .innerJoin('role as r', 'uhr.role_guid', 'r.guid')
+                       .where('u.guid', email)
+                       .then(function(user){
+            user = user[0];
+            
+            var deviceTokens;
+            deviceTokens[0] = user.deviceToken;
+            
+            console.log('sending push notification');
+            pushNotifications(deviceTokens);
+            
 			console.log('new message saved');
 
 			// Emit to all sockets the newly recieved message, to webserver knows were to send it to based on the receiver_guid
@@ -113,6 +126,54 @@ module.exports = function(io) {
 			res.status(400).json(error);
 		});
     });
+    
+    // Accepts an array of device tokens and pushes a notification to the devices
+    function pushNotifications(deviceTokens) {
+        // Define relevant info
+        
+        // Your Authorization token
+        var jwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmOGUwMjNiNC0xN2Y0LTQ3ZGItOGM1NS01YWY4MGE4NDkyODYifQ.qmIs8oRBJ2rag5DJsMykn2GA7dGn_BqqAto4rqyfg_E';
+        
+        // var tokens = ['your', 'target', 'tokens'];
+        
+        // Your security profile
+        var profile = 'toursecurity';
+
+        // Build the request object
+        var req = {
+            method: 'POST',
+            url: 'https://api.ionic.io/push/notifications',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + jwt
+            },
+            data: {
+                "tokens": deviceTokens,
+                "profile": profile,
+                "notification": {
+                    "title": "Nieuw bericht",
+                    "message": "U heeft een bericht ontvangen",
+                    "android": {
+                        "title": "Hey",
+                        "message": "Hello Android!"
+                    },
+                    "ios": {
+                        "title": "Howdy",
+                        "message": "Hello iOS!"
+                    }
+                }
+            }
+        };
+
+        // Make the API call
+        $http(req).success(function(resp){
+        // Handle success
+        console.log("Ionic Push: Push success", resp);
+        }).error(function(error){
+        // Handle error 
+        console.log("Ionic Push: Push error", error);
+        });
+    }
 
     return router;
 }
