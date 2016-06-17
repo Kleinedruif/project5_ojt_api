@@ -81,6 +81,10 @@ module.exports = function(io) {
     router.post('/', auth.requireLoggedIn, auth.requireRole('ouder'), function(req, res, next){
         var db = req.app.locals.db;
 
+        var sender = req.body.senderId;
+        var receiver = req.body.receiverId;
+        var body = req.body.body;
+
         // Get current data in the right formate
         var d = new Date,
             dformat = [
@@ -96,18 +100,19 @@ module.exports = function(io) {
         // Insert message   
         db('message').insert({
             guid: Math.round(new Date().getTime() / 1000),
-            sender_guid: req.body.senderId,
-            receiver_guid: req.body.receiverId,
-            body: req.body.body,
+            sender_guid: sender,
+            receiver_guid: receiver,
+            body: body,
             date: d
         })
 		.then(function (inserts) {
             // Get the device tokens
-            db('user as u').select('u.*', 'r.guid as role_guid', 'r.name as role_name')
+            db('user as u').select('u.deviceToken')
 					   .innerJoin('user_has_role as uhr', 'u.guid', 'uhr.user_guid')
                        .innerJoin('role as r', 'uhr.role_guid', 'r.guid')
-                       .where('u.guid', req.body.receiverId)
-                       .then(function(user){
+                       .where('u.guid', receiver)
+                       .then(function(result){
+                          
                            
                 user = user[0];
                 
