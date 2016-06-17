@@ -102,18 +102,22 @@ module.exports = function(io) {
             date: d
         })
 		.then(function (inserts) {
+            // Get the device tokens
             db('user as u').select('u.*', 'r.guid as role_guid', 'r.name as role_name')
 					   .innerJoin('user_has_role as uhr', 'u.guid', 'uhr.user_guid')
                        .innerJoin('role as r', 'uhr.role_guid', 'r.guid')
-                       .where('u.guid', email)
+                       .where('u.guid', req.body.receiverId)
                        .then(function(user){
-            user = user[0];
-            
-            var deviceTokens;
-            deviceTokens[0] = user.deviceToken;
-            
-            console.log('sending push notification');
-            pushNotifications(deviceTokens);
+                           
+                user = user[0];
+                
+                var deviceTokens;
+                deviceTokens[0] = user.deviceToken;
+                
+                console.log('sending push notification');
+                pushNotifications(deviceTokens);
+                
+            });
             
 			console.log('new message saved');
 
