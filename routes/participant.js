@@ -86,7 +86,17 @@ router.put('/:id/score', auth.requireLoggedIn, auth.requireRole('teamleider'), f
             
             query.then(function(message) {
                 if(message == 0) {
-                    return res.status(404).json({error: "Activiteit of deelnemer bestaat niet!"});
+                    db('participant_has_activity').insert({
+                            participant_guid: id,
+                            activity_guid: activity,
+                            score: score
+                        }).then(function(message) {
+                            if(message == 0) {
+                                return res.json({message: 'OK'});
+                            } else {
+                                return res.status(404).json({error: "Activiteit of deelnemer bestaat niet!"});
+                            }
+                        });                     
                 } else {
                     return res.json({message: "OK"});
                 }
