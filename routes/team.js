@@ -157,7 +157,7 @@ router.put('/:id/score', auth.requireLoggedIn, auth.requireRole('teamleider'), f
                                         activity_guid: activity,
                                         score: score
                                     }).then(function(message) {
-                                        if (message != 0) succes = false;
+                                        if (message != 0) { succes = false; }
                                         count++;
                                     })
                                     // Make sure error is handled to avoind infinite loop
@@ -181,7 +181,7 @@ router.put('/:id/score', auth.requireLoggedIn, auth.requireRole('teamleider'), f
                     },
                     // On completion of all updates/inserts, call this function
                     function(err, n) {
-                        if (err) return res.status(400).json({message: 'Het toevoegen van scores is fout gegaan.'})                 
+                        if (err) { return res.status(400).json({message: 'Het toevoegen van scores is fout gegaan.'}); }                
                         return succes ? res.json({message: 'OK'}) : res.status(400).json({message: 'Het toevoegen van scores is niet helemaal goed gegaan.'});
                     }
                 );       
