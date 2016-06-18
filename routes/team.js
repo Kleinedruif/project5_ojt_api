@@ -139,7 +139,8 @@ router.put('/:id/score', auth.requireLoggedIn, auth.requireRole('teamleider'), f
                 async.whilst(
                     function() {return count < size;},
                     function(callback) {
-                        participants.forEach(function(participant){                 
+                        participants.forEach(function(participant){
+                            // UPDATE the score              
                             db('participant as p')
                             .innerJoin('participant_has_activity as pha', 'p.guid', 'pha.participant_guid')
                             .where({
@@ -149,7 +150,8 @@ router.put('/:id/score', auth.requireLoggedIn, auth.requireRole('teamleider'), f
                                 'pha.score': score
                             }).then(function(message) {
                                 // If update failed, insert the new values instead
-                                if(message == 0) {               
+                                if(message == 0) {   
+                                    // INSERT the new score            
                                     db('participant_has_activity').insert({
                                         participant_guid: participant.guid,
                                         activity_guid: activity,
