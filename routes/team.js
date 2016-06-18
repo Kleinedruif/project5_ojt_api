@@ -181,16 +181,16 @@ router.put('/:id/score', auth.requireLoggedIn, auth.requireRole('teamleider'), f
                     },
                     // On completion of all updates/inserts, call this function
                     function(err, n) {
-                        if (err) return res.status(400).json({message: 'Het toevoegen van scores is fout gegaan'})                 
-                        return succes ? res.json({message: 'OK'}) : res.status(400).json({message: 'Het toevoegen van scores is niet helemaal goed gegaan'});
+                        if (err) return res.status(400).json({message: 'Het toevoegen van scores is fout gegaan.'})                 
+                        return succes ? res.json({message: 'OK'}) : res.status(400).json({message: 'Het toevoegen van scores is niet helemaal goed gegaan.'});
                     }
                 );       
             } else {
-                return res.status(404).json({error: "Team bestaat niet"});
+                return res.status(404).json({message: "Het team bestaat niet."});
             }
         });
     } else {
-       return res.status(400).json({error: "Ontbrekende data!"});
+       return res.status(400).json({message: "Ontbrekende data!"});
     }  
 });
 
