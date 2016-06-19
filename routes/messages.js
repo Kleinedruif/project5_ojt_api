@@ -1,6 +1,5 @@
 var express = require('express');
-var http = require("http");
-var https = require("https");
+var request = require('request');
 var router = express.Router();
 var uuid = require('node-uuid');
 var auth = require('../modules/auth');
@@ -73,22 +72,29 @@ module.exports = function(io) {
 
     router.post('/', auth.requireLoggedIn, auth.requireRole('ouder'), function(req, res, next){
         var db = req.app.locals.db;
+        
+        console.log("inside");
+        
+        var allowed; //temp
+        sendMessage(req, res, allowed, io);
 
         // This query check if you are allowed to send from this role to the receivers role
-        var query = db('user as u1')
-            .innerJoin('user_has_role as uhr1', 'u1.guid', 'uhr1.user_guid')
-            .innerJoin('role_can_send_to as rcst', 'uhr1.role_guid', 'rcst.role_guid_from')
-            .innerJoin('user_has_role as uhr2', 'rcst.role_guid_to', 'uhr2.user_guid')
-            .innerJoin('role as r', 'rcst.role_guid_to', 'r.guid')
-            .where('u1.guid', req.body.senderId)
-            .where('uhr2.user_guid', req.body.receiverId)
-            .then(function(allowed){
-                if (allowed && allowed.length){
-                    sendMessage(req, res, allowed, io);
-                } else {
-                    return res.status(404).json({message: 'Kan dit bericht niet naar deze persoon versturen'});
-                }
-            })
+        // var query = db('user as u1')
+        //     .innerJoin('user_has_role as uhr1', 'u1.guid', 'uhr1.user_guid')
+        //     .innerJoin('role_can_send_to as rcst', 'uhr1.role_guid', 'rcst.role_guid_from')
+        //     .innerJoin('user_has_role as uhr2', 'rcst.role_guid_to', 'uhr2.user_guid')
+        //     .innerJoin('role as r', 'rcst.role_guid_to', 'r.guid')
+        //     .where('u1.guid', req.body.senderId)
+        //     .where('uhr2.user_guid', req.body.receiverId)
+        //     .then(function(allowed){
+        //         if (allowed && allowed.length){
+        //             console.log("time to send message");
+        //             console.log("allowed: "+allowed);
+        //             sendMessage(req, res, allowed, io);
+        //         } else {
+        //             return res.status(404).json({message: 'Kan dit bericht niet naar deze persoon versturen'});
+        //         }
+        //     })
     });
 
     return router;
@@ -96,6 +102,7 @@ module.exports = function(io) {
 
 function sendMessage(req, res, allowed, io){
     var db = req.app.locals.db;
+    var receiver = req.body.receiverId;
     
     // Get current data in the right formate
     var d = new Date,
@@ -118,19 +125,27 @@ function sendMessage(req, res, allowed, io){
         date: d
     }).then(function (inserts) {                      
         // Only send messages with role 'ouder' to webserver
-        if (allowed[0].name == 'ouder' || req.role == 'ouder'){
+        
+        console.log("hmm");
+        
+        // if (allowed[0].name == 'ouder' || req.role == 'ouder'){
+            console.log("ja nee?");
+            
             // Get the device tokens
             db('user as u').select('u.deviceToken')
 					   .innerJoin('user_has_role as uhr', 'u.guid', 'uhr.user_guid')
                        .innerJoin('role as r', 'uhr.role_guid', 'r.guid')
                        .where('u.guid', receiver)
                        .then(function(user){
-                          
                            
+                console.log("it's time to dudududu");
+                
                 user = user[0];
                 
                 var deviceTokens = [];
                 deviceTokens[0] = user.deviceToken;
+                
+                //TODO if user.deviceToken is not null
                 
                 console.log('sending push notification');
                 pushNotifications(deviceTokens);
@@ -141,7 +156,7 @@ function sendMessage(req, res, allowed, io){
 
 			// Emit to all sockets the newly recieved message, to webserver knows were to send it to based on the receiver_guid
             io.sockets.send({ receiver_guid: req.body.receiverId, sender_guid: req.body.senderId, body: req.body.body });
-        }
+        // }
         return res.status(200).json(inserts);//user.toObject({ virtuals: true }));
     }).catch(function (error) {
         return res.status(400).json(error);
@@ -152,87 +167,40 @@ function sendMessage(req, res, allowed, io){
 function pushNotifications(deviceTokens) {
     // Define relevant info
     
-    // Your Authorization token
+    // Ionic Push Notifications url
+    var url = 'https://api.ionic.io/push/notifications';
+    
+    // Your Ionic Authorization token
     var jwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmOGUwMjNiNC0xN2Y0LTQ3ZGItOGM1NS01YWY4MGE4NDkyODYifQ.qmIs8oRBJ2rag5DJsMykn2GA7dGn_BqqAto4rqyfg_E';
     
-    // var tokens = ['your', 'target', 'tokens'];
-    
-    // Your security profile
+    // Your Ionic security profile
     var profile = 'toursecurity';
-
-    var post_data = JSON.stringify({
+    
+    var request_data = {
             "tokens": deviceTokens,
             "profile": profile,
             "notification": {
-                "title": "Nieuw bericht",
-                "message": "U heeft een bericht ontvangen",
-                "android": {
-                    "title": "Hey",
-                    "message": "Hello Android!"
-                },
-                "ios": {
-                    "title": "Howdy",
-                    "message": "Hello iOS!"
-                }
+                "message": "U heeft een nieuw bericht ontvangen",
             }
-    });
-
-
-    var post_options = {
-        host: 'https://api.ionic.io',
-        port: '443',
-        method: 'POST',
-        path: '/push/notifications',
+    };
+    
+    // Fire request
+    request({
+        url: url,
+        method: "POST",
+        json: true,
         headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + jwt
+        },
+        body: request_data
+     }, function (error, response, body) {
+        if (!error && response.statusCode === 200) {
+            console.log(body)
+            console.log("Ionic Push: Push success", response);
         }
-    };
-
-    // Set up the request
-    var post_req = http.post(post_options, function(res) {
-        res.setEncoding('utf8');
-        res.on('data', function (chunk) {
-            console.log('Response: ' + chunk);
-        });
+        else {
+            console.log("Ionic Push: Push error", error);
+        }
     });
-
-    // post the data
-    post_req.write(post_data);
-    post_req.end();
-
-    // Build the request object
-    // var req = {
-    //     method: 'POST',
-    //     url: 'https://api.ionic.io/push/notifications',
-    //     headers: {
-    //         'Content-Type': 'application/json',
-    //         'Authorization': 'Bearer ' + jwt
-    //     },
-    //     data: {
-    //         "tokens": deviceTokens,
-    //         "profile": profile,
-    //         "notification": {
-    //             "title": "Nieuw bericht",
-    //             "message": "U heeft een bericht ontvangen",
-    //             "android": {
-    //                 "title": "Hey",
-    //                 "message": "Hello Android!"
-    //             },
-    //             "ios": {
-    //                 "title": "Howdy",
-    //                 "message": "Hello iOS!"
-    //             }
-    //         }
-    //     }
-    // };
-
-    // // Make the API call
-    // http(req).success(function(resp){
-    // // Handle success
-    // console.log("Ionic Push: Push success", resp);
-    // }).error(function(error){
-    // // Handle error 
-    // console.log("Ionic Push: Push error", error);
-    // });
 }
