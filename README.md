@@ -38,6 +38,23 @@ Om ontwikkelen makkelijker te maken kan “npm install nodemon –g” geïnstal
 (Zoiets zou je moeten krijgen na het opstarten van de server via nodemon)
 We maken gebruikt van de editor Visual Studio Code, maar elke andere IDE of tekst editor kan gebruikt worden; er hoeft immers niet gecompileerd te worden.
  
+# Push Notifications:
+
+<br />![alt tag](https://www.filepicker.io/api/file/XMoBr7XxTeidnnjzx4ou)<br />
+De Push Notifications worden verstuurd vanaf de Api naar Ionic en dan naar GCM of APNS en vervolgens het device.
+
+Wanneer iemand inlogt wordt er gecheckt of er een Device Token wordt meegestuurd, als er een Device Token is wordt deze in de Database gezet en kan iemand Push Notifications ontvangen.
+
+Push Notifications worden verstuurd wanneer de ontvanger een Device Token heeft. De ontvanger krijgt dus een popup wanneer die een nieuw bericht heeft ontvangen.
+
+Op het moment is helaas alleen Android ondersteund en geen iOS.
+
+Voor het opzetten en snappen van Push Notifications wordt deze guide aangeraden: https://devdactic.com/ionic-push-notifications-guide/. Dit is waar wij gebruik van hebben gemaakt.
+
+Voor het aanpassen van de Push Notification settings moet je naar de messages.js gaan, vanaf regel 140 in de function pushNotifications(deviceTokens). De code spreekt vrij voor zichzelf. Zie ook deze pagina voor het aanpassen van de Push Notificatie http://docs.ionic.io/docs/push-sending-push 
+
+Het overdragen van het Ionic project en het Google Cloud Messaging project kan over de email worden gedaan of dinsdag, na de demo presentatie.
+
 
 # Opzet Github:
 
