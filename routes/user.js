@@ -75,8 +75,6 @@ function getCurrentDate(){
 // });
 
 router.post('/login', function (req, res, next) {
-    console.log("elloa");
-    
     let email = req.body.email.toLowerCase();
     let password = req.body.password;
     let deviceToken = req.body.deviceToken;
@@ -85,9 +83,6 @@ router.post('/login', function (req, res, next) {
         return res.status(400).json({ message: "Vul alstublieft een email en een wachtwoord in." });
     }
     
-    console.log("deviceToken: "+deviceToken);
-    
-    // auth.login(req, res, email, password);
     auth.login(req, res, email, password, deviceToken);
 });
 
