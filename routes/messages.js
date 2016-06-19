@@ -94,7 +94,6 @@ module.exports = function(io) {
 
 function sendMessage(req, res, allowed, io){
     var db = req.app.locals.db;
-    var receiver = req.body.receiverId;
     
     // Get current data in the right formate
     var d = new Date,
@@ -117,7 +116,7 @@ function sendMessage(req, res, allowed, io){
         date: d
     }).then(function (inserts) {                      
         // Only send push notifications to users with a device token
-        if(allowed[0].deviceToken !== undefined) {
+        if(!allowed[0].deviceToken) {
             var deviceTokens = [];
             deviceTokens[0] = allowed[0].deviceToken;
             

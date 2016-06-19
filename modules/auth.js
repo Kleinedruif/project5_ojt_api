@@ -81,7 +81,7 @@ module.exports = {
                         // Get current data in the right formate
                         var date = getCurrentDate();
                         
-                        if(deviceToken !== undefined) {
+                        if(!deviceToken) {
                             db('user').where('email', email).update('authToken', authToken).update('token_experation', date).update('deviceToken', deviceToken).then(function(inserts) {
                                 return res.status(200).json({
                                     message: "OK",
