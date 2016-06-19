@@ -5,7 +5,6 @@ var fs = require('fs');
 var webserverConfig = require('../config/config');
 
 module.exports = function (io) {
-
     // Make sure the incomming sockets is from the right domain and with the right token
     // This is a middleware function
     io.set('authorization', function (handshake, callback) {

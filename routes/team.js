@@ -106,25 +106,18 @@ router.post('/:id/note', auth.requireLoggedIn, auth.requireRole('teamleider'), f
 });
 
 router.get('/:id/score', auth.requireLoggedIn, auth.requireRole('teamleider'), function(req, res, next) {
-    
     var db = req.app.locals.db;
-    
-    var query = db("team as t").where('t.guid', id)
+ 
+    var query = db('team as t')
                 .innerJoin('participant as p', 't.guid', 'p.team_guid')
                 .innerJoin('participant_has_activity as pha', 'p.guid', 'pha.participant_guid')
-                .select('t.name as team_name', 'p.first_name', 'p.last_name', 'p.guid as participant_guid', 'pha.score');
-    
-    if(type == "total") {
-        query.sum('pha.score as score').groupBy('p.guid');
-    } else {
-        query.select('pha.activity_guid');
-    }
+                .where('t.guid', req.params.id)
+                .select('t.name as team_name', 'p.first_name', 'p.last_name', 'p.guid as participant_guid', 'pha.score')
+                .sum('pha.score as score').groupBy('p.guid');
     
     query.then(function(score) {
-        res.json(score);
-    })
-    
-    
+        return res.json(score);
+    });
 });
 
 router.put('/:id/score', auth.requireLoggedIn, auth.requireRole('teamleider'), function(req, res, next) {
