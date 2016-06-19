@@ -1,4 +1,6 @@
 var express = require('express');
+var async = require('async');
+
 var router = express.Router();
 var auth = require('../modules/auth');
 // var cors = require('cors');
@@ -120,37 +122,77 @@ router.get('/:id/score', auth.requireLoggedIn, auth.requireRole('teamleider'), f
     });
 });
 
-router.put('/:id/score', auth.requireLoggedIn, auth.requireRole('teamleider'), function(req, res, next) {
-   
-   var activity = req.body.activity_guid;
-   var score = req.body.score;
-   var id = req.params.id;
+router.put('/:id/score', auth.requireLoggedIn, auth.requireRole('teamleider'), function(req, res, next) {  
+    var db = req.app.locals.db;     
+    var activity = req.body.activity_guid;
+    var score = req.body.score;
+    var id = req.params.id;
    
    if(activity && score) {
-       
-       var db = req.app.locals.db;
-       var query = db('team as t')
-                   .innerJoin('participant as p', 't.guid', 'p.team_guid')
-                   .innerJoin('participant_has_activity as pha', 'p.guid', 'pha.participant_guid')
-                   .where({
-                       't.guid': id,
-                       'pha.activity_guid': activity
-                   }).update({
-                       'pha.score': score
-                   });
-        
-        query.then(function(message) {
-            if(message == 0) {
-                res.json({error: "Activity or team does not exist!"});
+       // Get all participants in the team
+       db('participant').where({ 'team_guid': id }).where('status', 'active').then(function (participants) {
+            if (participants && participants.length){             
+                var size = participants.length;
+                var count = 0;
+                var succes = true;
+
+                // Loop async of all the participants to add or update the score
+                async.whilst(
+                    function() {return count < size;},
+                    function(callback) {
+                        participants.forEach(function(participant){
+                            // UPDATE the score              
+                            db('participant as p')
+                            .innerJoin('participant_has_activity as pha', 'p.guid', 'pha.participant_guid')
+                            .where({
+                                'p.guid': participant.guid,
+                                'pha.activity_guid': activity
+                            }).update({
+                                'pha.score': score
+                            }).then(function(message) {
+                                // If update failed, insert the new values instead
+                                if(message == 0) {   
+                                    // INSERT the new score            
+                                    db('participant_has_activity').insert({
+                                        participant_guid: participant.guid,
+                                        activity_guid: activity,
+                                        score: score
+                                    }).then(function(message) {
+                                        if (message != 0) { succes = false; }
+                                        count++;
+                                    })
+                                    // Make sure error is handled to avoind infinite loop
+                                    .catch(function(err){
+                                        count++;
+                                        succes = false;
+                                    })                        
+                                } else {
+                                    count++;
+                                }
+                            })
+                            // Make sure error is handled to avoind infinite loop
+                            .catch(function(err){
+                                count++;
+                                succes = false;
+                            }) 
+                        });               
+                        setTimeout(function() {
+                            callback(null, count);
+                        }, 3000);
+                    },
+                    // On completion of all updates/inserts, call this function
+                    function(err, n) {
+                        if (err) { return res.status(400).json({message: 'Het toevoegen van scores is fout gegaan. '  + err}); }                
+                        return succes ? res.json({message: 'OK'}) : res.status(400).json({message: 'Het toevoegen van scores is niet helemaal goed gegaan.'});
+                    }
+                );       
             } else {
-                res.json({message: "OK"});
+                return res.status(404).json({message: "Het team bestaat niet."});
             }
         });
-       
-   } else {
-       res.json({error: "Missing data!"});
-   }
-
+    } else {
+       return res.status(400).json({message: "Ontbrekende data!"});
+    }  
 });
 
 module.exports = router;

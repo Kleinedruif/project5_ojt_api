@@ -77,21 +77,31 @@ router.put('/:id/score', auth.requireLoggedIn, auth.requireRole('teamleider'), f
     if(activity && score) {
         
         var db = req.app.locals.db;
+        // UPDATE score
         var query = db('participant_has_activity')
-                    .where({
-                        participant_guid: id,
-                        activity_guid: activity
-                    }).update({
-                        score: score
-                    });
-            
-            query.then(function(message) {
-                if(message == 0) {
-                    return res.status(404).json({error: "Activiteit of deelnemer bestaat niet!"});
-                } else {
-                    return res.json({message: "OK"});
-                }
-            });
+        .where({
+            participant_guid: id,
+            activity_guid: activity
+        }).update({
+            score: score
+        }).then(function(message) {
+            if(message == 0) {
+                // INSERT new score
+                db('participant_has_activity').insert({
+                    participant_guid: id,
+                    activity_guid: activity,
+                    score: score
+                }).then(function(message) {
+                    if(message == 0) {
+                        return res.json({message: 'OK'});
+                    } else {
+                        return res.status(404).json({error: "Activiteit of deelnemer bestaat niet!"});
+                    }
+                });                     
+            } else {
+                return res.json({message: "OK"});
+            }
+        });
         
     } else {
         return res.status(400).json({error: "Ontbrekende data!"});
