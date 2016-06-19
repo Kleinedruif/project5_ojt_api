@@ -48,11 +48,14 @@ module.exports = {
     },
     
     // Try to login the user.
-    login: function(req, res, email, password) {
+    login: function(req, res, email, password, deviceToken) {
         var db = req.app.locals.db;
 
         email = email.trim();
         password = password.trim();
+        if(deviceToken !== undefined) {
+            deviceToken = deviceToken.trim();
+        }
         
         db('user as u').select('u.*', 'r.guid as role_guid', 'r.name as role_name')
 					   .innerJoin('user_has_role as uhr', 'u.guid', 'uhr.user_guid')
@@ -78,25 +81,50 @@ module.exports = {
                         // Get current data in the right formate
                         var date = getCurrentDate();
                         
-                        db('user').where('email', email).update('authToken', authToken).update('token_experation', date).then(function(inserts) {
-                            return res.status(200).json({
-                                message: "OK",
-                                auth_token: authToken,
-                                
-                                // User data
-                                guid: user.guid,
-                                team_guid: user.team_guid,
-                                status: user.status,
-                                email: user.email,
-                                first_name: user.first_name,
-                                last_name: user.last_name,
-                                role_guid: user.role_guid,
-                                role_name: user.role_name             // Role name
+                        if(!deviceToken) {
+                            db('user').where('email', email).update('authToken', authToken).update('token_experation', date).update('deviceToken', deviceToken).then(function(inserts) {
+                                return res.status(200).json({
+                                    message: "OK",
+                                    auth_token: authToken,
+                                    deviceToken: deviceToken,
+                                    
+                                    // User data
+                                    guid: user.guid,
+                                    team_guid: user.team_guid,
+                                    status: user.status,
+                                    email: user.email,
+                                    first_name: user.first_name,
+                                    last_name: user.last_name,
+                                    role_guid: user.role_guid,
+                                    role_name: user.role_name             // Role name
+                                });
+                            })
+                            .catch(function(error) {
+                                return res.status(500).json({ message: error });
                             });
-                        })
-                        .catch(function(error) {
-                            return res.status(500).json({ message: error });
-                        });
+                        }
+                        else {
+                            db('user').where('email', email).update('authToken', authToken).update('token_experation', date).then(function(inserts) {
+                                return res.status(200).json({
+                                    message: "OK",
+                                    auth_token: authToken,
+                                    deviceToken: deviceToken,
+                                    
+                                    // User data
+                                    guid: user.guid,
+                                    team_guid: user.team_guid,
+                                    status: user.status,
+                                    email: user.email,
+                                    first_name: user.first_name,
+                                    last_name: user.last_name,
+                                    role_guid: user.role_guid,
+                                    role_name: user.role_name             // Role name
+                                });
+                            })
+                            .catch(function(error) {
+                                return res.status(500).json({ message: error });
+                            });
+                        }
                     } else {
                         return res.status(401).json({ message: "U heeft een verkeerde email of wachtwoord ingevuld." });
                     }
