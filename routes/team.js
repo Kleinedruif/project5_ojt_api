@@ -181,7 +181,7 @@ router.put('/:id/score', auth.requireLoggedIn, auth.requireRole('teamleider'), f
                     },
                     // On completion of all updates/inserts, call this function
                     function(err, n) {
-                        if (err) { return res.status(400).json({message: 'Het toevoegen van scores is fout gegaan.'}); }                
+                        if (err) { return res.status(400).json({message: 'Het toevoegen van scores is fout gegaan. '  + err}); }                
                         return succes ? res.json({message: 'OK'}) : res.status(400).json({message: 'Het toevoegen van scores is niet helemaal goed gegaan.'});
                     }
                 );       
