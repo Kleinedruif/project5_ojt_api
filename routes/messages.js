@@ -3,7 +3,6 @@ var request = require('request');
 var router = express.Router();
 var uuid = require('node-uuid');
 var auth = require('../modules/auth');
-// var cors = require('cors');
 
 module.exports = function(io) {
     //TODO make route '/'
@@ -85,7 +84,6 @@ module.exports = function(io) {
                 if (allowed && allowed.length){
                     sendMessage(req, res, allowed, io);
                 } else {
-                    console.log("Mag niet versturen");
                     return res.status(404).json({message: 'Kan dit bericht niet naar deze persoon versturen'});
                 }
             })

@@ -9,7 +9,6 @@ let path = require('path');
 let validator = require('validator');
 let crypto = require('crypto');
 let auth = require('../modules/auth');
-// var cors = require('cors');
 
 let multer = require('multer'); // multipart/form-data middleware
 let storage = multer.diskStorage({
