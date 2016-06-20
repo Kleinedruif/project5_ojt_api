@@ -76,11 +76,11 @@ module.exports = function(io) {
         var query = db('user as u1').select('u1.*', 'u2.deviceToken as receiver_token', 'r.name as name')
             .innerJoin('user_has_role as uhr1', 'u1.guid', 'uhr1.user_guid')
             .innerJoin('role_can_send_to as rcst', 'uhr1.role_guid', 'rcst.role_guid_from')
-            .innerJoin('user_has_role as uhr2', 'rcst.role_guid_to', 'uhr2.user_guid')
+            .innerJoin('user_has_role as uhr2', 'rcst.role_guid_to', 'uhr2.role_guid')
             .innerJoin('user as u2', 'rcst.role_guid_to', 'u2.guid')
-            .innerJoin('role as r', 'rcst.role_guid_to', 'r.guid')
+            .innerJoin('role as r', 'uhr2.role_guid', 'r.guid')
             .where('u1.guid', req.body.senderId)
-            .where('uhr2.user_guid', req.body.receiverId)
+            .andWhere('uhr2.user_guid', req.body.receiverId)
             .then(function(allowed){
                 if (allowed && allowed.length){
                     sendMessage(req, res, allowed, io);
